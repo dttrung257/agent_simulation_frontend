@@ -1,5 +1,11 @@
+import Project from "./components/Project";
+
 function App() {
-  return <div className="App"></div>;
+  return (
+    <div className="h-screen w-screen">
+      <Project />
+    </div>
+  );
 }
 
 export default App;

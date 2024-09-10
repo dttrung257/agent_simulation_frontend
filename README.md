@@ -7,7 +7,6 @@
 ### This app uses:
 
 - [Tailwind CSS](https://tailwindcss.com) for styling
-- [Flowbite](https://flowbite-react.com) for UI components
 
 ### `npm start`
 
