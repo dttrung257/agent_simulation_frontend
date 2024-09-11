@@ -1,4 +1,8 @@
-import { InformationCircleIcon } from "@heroicons/react/24/solid";
+import {
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/solid";
 
 function Alert({ type, content }) {
   const style = {
@@ -11,7 +15,9 @@ function Alert({ type, content }) {
 
   return (
     <div className={style[type]}>
-      <InformationCircleIcon className="size-6 mr-4" />
+      {type === "success" && <CheckCircleIcon className="size-6 mr-4" />}
+      {type === "error" && <ExclamationCircleIcon className="size-6 mr-4" />}
+      {type === "info" && <InformationCircleIcon className="size-6 mr-4" />}
       <div>{content}</div>
     </div>
   );

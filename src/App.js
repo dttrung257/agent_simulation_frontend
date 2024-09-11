@@ -1,4 +1,4 @@
-import Project from "./components/Project";
+import Project from "./pages/Project";
 
 function App() {
   return (
