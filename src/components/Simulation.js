@@ -13,8 +13,9 @@ function Simulation({ nodeOptions, modelOptions }) {
   const [simulation, setSimulation] = useState({});
   const [experimentOptions, setExperimentOptions] = useState([]);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
-  const [simulationStatus, setSimulationStatus] = useState();
+  const [simulationStatus, setSimulationStatus] = useState("");
   const [disableSimulation, setDisableSimulation] = useState(false);
+  const [status, setStatus] = useState(0);
 
   useEffect(() => {
     if (simulation.model) {
@@ -36,6 +37,7 @@ function Simulation({ nodeOptions, modelOptions }) {
   };
 
   const checkSimulationStatus = () => {
+    console.log(simulation);
     getResultStatus(simulation.experiment)
       .then((response) => {
         console.log(response.data);
@@ -44,6 +46,7 @@ function Simulation({ nodeOptions, modelOptions }) {
           : setSimulationStatus(
               "Simulation is running. Please wait for the results."
             );
+        setStatus(1);
       })
       .catch((error) => {
         console.log(error.response.data.message);
@@ -123,29 +126,32 @@ function Simulation({ nodeOptions, modelOptions }) {
           )}
         </div>
         <div className="place-items-center grid grid-flow-col">
-          {isSimulationRunning &&
-            simulationStatus.startsWith("Simulation complete!") && (
-              <Link to={{ pathname: "/result", state: simulation }}>
-                <button className="flex items-center justify-center p-0.5 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
-                  <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                    View result
-                  </span>
-                </button>
-              </Link>
-            )}
-          {isSimulationRunning &&
-            !simulationStatus.startsWith("Simulation complete!")(
-              <button
-                onClick={() => checkSimulationStatus()}
-                className="flex items-center gap-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2"
-              >
-                <ArrowPathIcon className="size-4 p-0 m-0" />
-                Refresh
+          {isSimulationRunning && status === 1 && (
+            <Link
+              to={{
+                pathname: "/result",
+              }}
+              state={simulation}
+            >
+              <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
+                <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                  View result
+                </span>
               </button>
-            )}
+            </Link>
+          )}
+          {isSimulationRunning && status === 0 && (
+            <button
+              onClick={() => checkSimulationStatus()}
+              className="flex hover:cursor-pointer items-center gap-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2"
+            >
+              <ArrowPathIcon className="size-4 p-0 m-0" />
+              Refresh
+            </button>
+          )}
 
           <button
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5"
+            className="text-white hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5"
             disabled={disableSimulation}
             onClick={() => runSimulationEvent()}
           >

@@ -8,6 +8,8 @@ import Carousel from "../components/Carousel";
 
 function SimulationResult() {
   const data = useLocation();
+  console.log(data);
+  const simulation = data.state;
   const [experimentResultId, setExperimentResultId] = useState(-1);
   const [cfi, setCfi] = useState([]);
   const [cfiPig, setCfiPig] = useState([]);
@@ -15,8 +17,6 @@ function SimulationResult() {
   const [weight, setWeight] = useState([]);
   const [dfi, setDfi] = useState([]);
   const [currentCategory, setCurrentCategory] = useState("cfi");
-
-  const simulation = data.state.simulation;
 
   const splitResultImageArray = (result) => {
     const chunkSize = simulation.finalStep;
