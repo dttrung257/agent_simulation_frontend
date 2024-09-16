@@ -5,14 +5,16 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
   const defaultValue =
     name !== "finalStep" ? `Select ${title.toString().toLowerCase()}` : 0;
   const [value, setValue] = useState(defaultValue);
+  const errorInputFieldMessage = "Please provide a number between 1 and 1000.";
 
-  const [error, setError] = useState("");
+  const [error, setError] = useState(errorInputFieldMessage);
 
   const handleInputField = (e) => {
+    setValue(e.target.value);
     if (e.target.value < 1 || e.target.value > 1000) {
-      setError("Please provide a number between 1 and 1000.");
+      setError(errorInputFieldMessage);
     } else {
-      setError("");
+      setError("No Error");
     }
   };
 
@@ -49,7 +51,9 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
         ) : (
           <input
             type="number"
+            name={name}
             disabled={disabled}
+            value={value}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
             placeholder="1-1000"
             onChange={onChange}
@@ -66,14 +70,23 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
         />
       )}
 
-      {!disabled && value !== defaultValue && error === "" && (
+      {!disabled && value !== defaultValue && name !== "finalStep" && (
         <Alert
           type="success"
           content="Your selection/input is complete. Proceed to the next section."
         />
       )}
 
-      {error && <Alert type="error" content={error} />}
+      {!disabled && error === "No Error" && name === "finalStep" && (
+        <Alert
+          type="success"
+          content="Your selection/input is complete. Proceed to the next section."
+        />
+      )}
+
+      {!disabled &&
+        error === errorInputFieldMessage &&
+        name === "finalStep" && <Alert type="error" content={error} />}
     </div>
   );
 }

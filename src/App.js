@@ -1,10 +1,13 @@
 import Project from "./pages/Project";
+import SimulationResult from "./pages/SimulationResult";
+import { Route, Routes } from "react-router-dom";
 
 function App() {
   return (
-    <div className="h-screen w-screen">
-      <Project />
-    </div>
+    <Routes>
+      <Route path="/" element={<Project />} />
+      <Route path="/result" element={<SimulationResult />} />
+    </Routes>
   );
 }
 
