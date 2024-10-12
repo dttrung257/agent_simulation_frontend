@@ -19,11 +19,11 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
   };
 
   return (
-    <div className="max-w-md p-6 bg-white border border-gray-200 rounded-lg shadow">
+    <div className="w-full p-6 bg-white border border-gray-200 rounded-lg shadow">
       <h2 className="mb-4 text-2xl font-semibold tracking-tight text-gray-900">
         {title}
       </h2>
-      <form className="max-w-sm mb-4 mx-auto">
+      <form className="w-full mb-4 mx-auto">
         <label className="block mb-2 text-sm font-medium text-gray-900">
           Choose {title.toString().toLowerCase()}
         </label>
