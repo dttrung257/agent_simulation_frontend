@@ -1,12 +1,14 @@
+import AnimationPlayer from "./pages/AnimationPlayer";
 import Project from "./pages/Project";
-import SimulationResult from "./pages/SimulationResult";
 import { Route, Routes } from "react-router-dom";
+import StepViewer from "./pages/StepViewer";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Project />} />
-      <Route path="/result" element={<SimulationResult />} />
+      <Route path="/view-steps" element={<StepViewer />} />
+      <Route path="/play-animation" element={<AnimationPlayer />} />
     </Routes>
   );
 }

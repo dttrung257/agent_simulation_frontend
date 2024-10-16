@@ -1,13 +1,14 @@
 import SimulationInput from "../layouts/SimulationInput";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getExperimentList,
   runSimulation,
   getResultStatus,
 } from "../api/simulationApi";
 import Alert from "../layouts/Alert";
-import { ArrowPathIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
+import "ldrs/hourglass";
+import { ring2 } from "ldrs";
 
 function Simulation({ nodeOptions, modelOptions }) {
   const [simulation, setSimulation] = useState({});
@@ -15,14 +16,28 @@ function Simulation({ nodeOptions, modelOptions }) {
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [simulationStatus, setSimulationStatus] = useState("");
   const [disableSimulation, setDisableSimulation] = useState(false);
+  const [waiting, setWaiting] = useState(true);
   const [status, setStatus] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const interval = useRef(null);
+
+  ring2.register();
 
   useEffect(() => {
     if (simulation.model) {
       getExperiments();
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [simulation]);
+  }, [simulation.model]);
+
+  useEffect(() => {
+    console.log(status);
+    if (status >= 3) {
+      clearInterval(interval.current);
+    }
+  }, [status]);
 
   const getExperiments = () => {
     getExperimentList(process.env.REACT_APP_PROJECT_ID, simulation.model).then(
@@ -36,26 +51,31 @@ function Simulation({ nodeOptions, modelOptions }) {
     setSimulation({ ...simulation, [e.target.name]: e.target.value });
   };
 
-  const checkSimulationStatus = () => {
-    console.log(simulation);
-    getResultStatus(simulation.experiment)
-      .then((response) => {
-        console.log(response.data);
-        response.data.status === "success"
-          ? setSimulationStatus("Simulation complete! You can view the result.")
-          : setSimulationStatus(
-              "Simulation is running. Please wait for the results."
+  const checkSimulationStatus = (resultId) => {
+    interval.current = setInterval(async () => {
+      await getResultStatus(resultId)
+        .then((response) => {
+          setWaiting(response.data.data.waiting);
+          setStatus(() => response.data.data.status);
+          setCurrentStep(response.data.data.currentStep);
+          setProgress(
+            (response.data.data.currentStep / simulation.finalStep) * 100
+          );
+          if (response.data.data.status === 3) {
+            setSimulationStatus(
+              "Simulation completed successfully. Results are now ready for viewing."
             );
-        setStatus(1);
-      })
-      .catch((error) => {
-        console.log(error.response.data.message);
-        setIsSimulationRunning(false);
-        setSimulationStatus(error.response.data.message);
-      });
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          setSimulationStatus("Run simulation failed. Please try again.");
+          setStatus(4);
+        });
+    }, 2000);
   };
 
-  const runSimulationEvent = () => {
+  const runSimulationEvent = async () => {
     console.log("Run simulation");
     setDisableSimulation(true);
     const experiments = [];
@@ -67,17 +87,34 @@ function Simulation({ nodeOptions, modelOptions }) {
     experiments.push(experiment);
     const projectId = process.env.REACT_APP_PROJECT_ID;
     const simulationInfo = {
-      projectId,
-      experiments,
+      simulationRequests: [
+        {
+          nodeId: simulation.node,
+          projectId: projectId,
+          experiments: [
+            {
+              id: simulation.experiment,
+              modelId: simulation.model,
+              finalStep: simulation.finalStep,
+            },
+          ],
+        },
+      ],
     };
+    setIsSimulationRunning(true);
     console.log(simulationInfo);
-    runSimulation(simulationInfo)
+    await runSimulation(simulationInfo)
       .then((response) => {
         setIsSimulationRunning(true);
         setSimulationStatus("Success! Simulation is running.");
-        console.log(response.data.data);
+        setSimulation({
+          ...simulation,
+          resultId: response.data.data[0].experimentResultId,
+        });
+        checkSimulationStatus(response.data.data[0].experimentResultId);
       })
       .catch((error) => {
+        error = true;
         setIsSimulationRunning(false);
         setSimulationStatus(error.response.data.message);
         setDisableSimulation(false);
@@ -87,7 +124,7 @@ function Simulation({ nodeOptions, modelOptions }) {
 
   return (
     <div className="block p-6 bg-white border border-gray-200 rounded-lg shadow">
-      <div className="grid grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-4 gap-4 mb-6">
         <SimulationInput
           title="Node"
           name="node"
@@ -116,6 +153,21 @@ function Simulation({ nodeOptions, modelOptions }) {
           onChange={(e) => handleChange(e)}
         />
       </div>
+      {!waiting && (
+        <div className="w-full">
+          <div className="text-right font-medium text-lg mb-2">
+            {currentStep}/{simulation.finalStep}{" "}
+            {simulation.finalStep >= 2 ? "steps" : "step"}
+          </div>
+          <div className="w-full mb-4 bg-gray-200 rounded-full h-2">
+            <div
+              style={{ width: `${progress}%` }}
+              className="bg-blue-600 h-2 rounded-full "
+            ></div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="flex items-center pr-8">
           {isSimulationRunning && (
@@ -126,37 +178,55 @@ function Simulation({ nodeOptions, modelOptions }) {
           )}
         </div>
         <div className="place-items-center grid grid-flow-col">
-          {isSimulationRunning && status === 1 && (
-            <Link
-              to={{
-                pathname: "/result",
-              }}
-              state={simulation}
-            >
-              <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
-                <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                  View result
-                </span>
-              </button>
-            </Link>
-          )}
-          {isSimulationRunning && status === 0 && (
-            <button
-              onClick={() => checkSimulationStatus()}
-              className="flex hover:cursor-pointer items-center gap-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2"
-            >
-              <ArrowPathIcon className="size-4 p-0 m-0" />
-              Refresh
-            </button>
+          {!waiting && status === 3 && (
+            <>
+              <Link
+                to={{
+                  pathname: "/view-steps",
+                }}
+                state={simulation}
+              >
+                <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
+                  <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                    View step-by-step
+                  </span>
+                </button>
+              </Link>
+              <Link
+                to={{
+                  pathname: "/play-animation",
+                }}
+                state={simulation}
+              >
+                <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
+                  <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                    Play simulation
+                  </span>
+                </button>
+              </Link>
+            </>
           )}
 
-          <button
-            className="text-white hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5"
-            disabled={disableSimulation}
-            onClick={() => runSimulationEvent()}
-          >
-            Run Simulate
-          </button>
+          {status !== 3 && (
+            <button
+              className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
+              disabled={disableSimulation}
+              onClick={() => runSimulationEvent()}
+            >
+              {isSimulationRunning && (
+                <l-ring-2
+                  size="20"
+                  stroke={3}
+                  bg-opacity="0.1"
+                  speed="1"
+                  color="white"
+                ></l-ring-2>
+              )}
+              {!isSimulationRunning
+                ? "Run Simulation"
+                : "Running Simulation..."}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -21,13 +21,11 @@ export const getExperimentList = async (projectId, modelId) => {
 };
 
 export const runSimulation = async (simulationInfo) => {
-  return await axiosInstance.post("/simulations", simulationInfo);
+  return await axiosInstance.post("/simulations/cluster", simulationInfo);
 };
 
-export const getResultStatus = async (experimentId) => {
-  return await axiosInstance.get(
-    `/experiment_result_statuses?experiment_id=${experimentId}`
-  );
+export const getResultStatus = async (resultId) => {
+  return await axiosInstance.get(`/experiment_results/${resultId}/progress`);
 };
 
 export const getExperimentResult = async (projectId, modelId, experimentId) => {
@@ -44,5 +42,21 @@ export const getExperimentResultImages = async (
 ) => {
   return await axiosInstance.get(
     `experiment_result_images?project_id=${projectId}&model_id=${modelId}&experiment_id=${experimentId}&experiment_result_id=${experimentResultId}`
+  );
+};
+
+export const getCategoriesResult = async (resultId) => {
+  return await axiosInstance.get(
+    `/experiment_result_categories?experiment_result_id=${resultId}`
+  );
+};
+
+export const getImageResultFromRange = async (
+  resultId,
+  startStep,
+  finalStep
+) => {
+  return await axiosInstance.get(
+    `/experiment_result_images?experiment_result_id=${resultId}&start_step=${startStep}&end_step=${finalStep}`
   );
 };
