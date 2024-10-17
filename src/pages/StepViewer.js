@@ -7,6 +7,8 @@ import {
 } from "../api/simulationApi";
 import {
   ArrowUturnLeftIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
@@ -79,7 +81,7 @@ function StepViewer() {
   };
 
   const handleStepInput = () => {
-    if (inputStep > parseInt(simulation.finalStep)) {
+    if (inputStep > parseInt(simulation.finalStep) - 1) {
       setError(true);
       return;
     }
@@ -103,17 +105,42 @@ function StepViewer() {
       <h1 className="text-center text-4xl font-semibold my-12 place-content-center">
         Step: {currentStep}
       </h1>
-
+      <div className="mx-auto relative w-fit place-content-center">
+        <button
+          type="button"
+          onClick={() => {
+            if (currentStep > 0) {
+              setCurrentStep(currentStep - 1);
+            }
+          }}
+          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 mb-2 mr-2"
+        >
+          <ChevronLeftIcon className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (currentStep < parseInt(simulation.finalStep) - 1) {
+              setCurrentStep(currentStep + 1);
+            }
+          }}
+          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 mb-2"
+        >
+          <ChevronRightIcon className="size-5" />
+        </button>
+      </div>
       <div className="mx-auto relative max-w-xl place-content-center">
         <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
           <MagnifyingGlassIcon className="size-5 text-gray-900" />
         </div>
+
         <input
           type="number"
           id="search"
+          value={inputStep}
           onChange={(e) => handleChange(e)}
           className="block w-full p-4 ps-10 text-md text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          placeholder={`Step 1 to ${simulation.finalStep}`}
+          placeholder={`Step 0 to ${simulation.finalStep - 1}`}
           required
         />
         <button
