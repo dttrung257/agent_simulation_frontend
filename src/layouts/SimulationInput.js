@@ -11,7 +11,7 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
 
   const handleInputField = (e) => {
     setValue(e.target.value);
-    if (e.target.value < 1 || e.target.value > 1000) {
+    if (e.target.value < 1 || e.target.value > 100000) {
       setError(errorInputFieldMessage);
     } else {
       setError("No Error");
