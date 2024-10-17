@@ -33,7 +33,6 @@ function Simulation({ nodeOptions, modelOptions }) {
   }, [simulation.model]);
 
   useEffect(() => {
-    console.log(status);
     if (status >= 3) {
       clearInterval(interval.current);
     }
@@ -200,7 +199,7 @@ function Simulation({ nodeOptions, modelOptions }) {
               >
                 <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
                   <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                    Play simulation
+                    Play simulaion
                   </span>
                 </button>
               </Link>

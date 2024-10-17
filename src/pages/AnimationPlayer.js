@@ -4,8 +4,9 @@ import {
   getImageResultFromRange,
   getCategoriesResult,
 } from "../api/simulationApi";
-import { PlayIcon } from "@heroicons/react/24/solid";
+import { PlayIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
+import { useNavigate } from "react-router-dom";
 
 function AnimationPlayer() {
   const data = useLocation();
@@ -13,21 +14,16 @@ function AnimationPlayer() {
   const [currentStep, setCurrentStep] = useState(-1);
   const [endStep, setEndStep] = useState(0);
   const [images, setImages] = useState([]);
-  const [playImage, setPlayImage] = useState("");
   const [play, setPlay] = useState(false);
   const [simulationCategoryId, setSimulationCategoryId] = useState(-1);
   const [loading, setLoading] = useState(true);
   const interval = useRef();
+  const navigate = useNavigate();
 
   quantum.register();
 
   useEffect(() => {
     setEndStep(simulation.finalStep);
-    // if (simulation.finalStep < 9) {
-    //   setEndStep(simulation.finalStep);
-    // } else {
-    //   setEndStep(8);
-    // }
     const getCategories = async () => {
       await getCategoriesResult(simulation.resultId).then((response) => {
         setSimulationCategoryId(
@@ -45,9 +41,7 @@ function AnimationPlayer() {
   }, []);
 
   useEffect(() => {
-    // if (currentStep >= 0) {
     getImages();
-    // }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [simulationCategoryId]);
@@ -62,7 +56,6 @@ function AnimationPlayer() {
     if (play && currentStep === 0) {
       const showImages = () => {
         interval.current = setInterval(() => {
-          console.log(currentStep);
           setCurrentStep((currentStep) => currentStep + 1);
         }, 1000);
       };
@@ -97,12 +90,6 @@ function AnimationPlayer() {
 
   const playSimulation = (imagePlayer) => {
     setPlay(true);
-    // images.forEach((image, index) => {
-    //   setTimeout(() => {
-    //     console.log(image.substring(100, 110));
-    //     setPlayImage(image);
-    //   }, 5000);
-    // });
   };
 
   return (
@@ -116,9 +103,9 @@ function AnimationPlayer() {
       ) : (
         <div className="h-screen w-screen justify-items-center place-content-center">
           {!play && (
-            <div className="flex justify-center mb-12">
+            <div className="justify-center mb-12">
               <button
-                className="flex items-center justify-center p-0.5 overflow-hidden text-lg font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white focus:ring-4 focus:outline-none focus:ring-green-200"
+                className="flex mx-auto items-center justify-center p-0.5 overflow-hidden text-lg font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white focus:ring-4 focus:outline-none focus:ring-green-200"
                 onClick={() => playSimulation(images)}
               >
                 <span className="flex px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
@@ -126,13 +113,29 @@ function AnimationPlayer() {
                   <div>Play simulation</div>
                 </span>
               </button>
+              <button
+                type="button"
+                className="mx-auto my-4 flex gap-2 text-gray-900 bg-white focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+                onClick={() => navigate("/")}
+              >
+                <ArrowUturnLeftIcon className="size-5" />
+                Back to home
+              </button>
             </div>
           )}
           {play && (
             <div>
               <div className="mx-auto w-fit text-4xl mb-4 font-medium">
-                Step: {currentStep + 1}
+                Step: {currentStep}
               </div>
+              <button
+                type="button"
+                className="mx-auto my-4 flex gap-2 text-gray-900 bg-white focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+                onClick={() => navigate("/")}
+              >
+                <ArrowUturnLeftIcon className="size-5" />
+                Back to home
+              </button>
 
               <div className="mx-auto bg-white border w-fit p-5 border-gray-300 rounded-lg shadow-2xl">
                 <img
