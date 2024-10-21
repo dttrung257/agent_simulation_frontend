@@ -1,10 +1,14 @@
 import { axiosInstance } from "./axios";
 
-export const getProject = async () => {
+export const getNodeList = async () => {
+  return await axiosInstance.get("/nodes");
+};
+
+export const getProjectList = async () => {
   return await axiosInstance.get("/projects");
 };
 
-export const getModelOptions = async (projectId, hasExperiment) => {
+export const getModelOptionsList = async (projectId, hasExperiment) => {
   return await axiosInstance.get(
     `/models?project_id=${projectId}&has_experiment=${hasExperiment}`
   );

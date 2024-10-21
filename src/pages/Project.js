@@ -2,41 +2,54 @@ import AddSimulation from "../components/AddSimulation";
 import Sidebar from "../layouts/Sidebar";
 import Simulation from "../components/Simulation";
 import { useEffect, useState } from "react";
-import { getModelList, getModelOptions } from "../api/simulationApi";
+import {
+  getModelList,
+  getModelOptionsList,
+  getNodeList,
+} from "../api/simulationApi";
 
-function Project() {
-  const workerNodeOptions = [{ name: "Master node", id: 1 }];
+function Project({ selectedProject }) {
+  const [nodeList, setNodeList] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
   const [modelList, setModelList] = useState([]);
 
-  const getModelOptionList = () => {
-    getModelOptions(process.env.REACT_APP_PROJECT_ID, true).then((response) => {
-      setModelOptions(response.data.data);
-    });
+  const getModelOptions = async () => {
+    await getModelOptionsList(process.env.REACT_APP_PROJECT_ID, true).then(
+      (response) => {
+        setModelOptions(response.data.data);
+      }
+    );
   };
 
-  const getModelListFromProject = () => {
-    getModelList().then((response) => {
+  const getModel = async () => {
+    await getModelList().then((response) => {
       setModelList(response.data.data);
     });
   };
 
+  const getNode = async () => {
+    await getNodeList().then((response) => {
+      setNodeList(response.data.data);
+    });
+  };
+
   useEffect(() => {
-    getModelOptionList();
-    getModelListFromProject();
+    getModelOptions();
+    getModel();
+    getNode();
   }, []);
 
   return (
     <div className="h-screen w-screen">
-      <Sidebar modelList={modelList} />
-      <div className="p-4 sm:ml-64">
-        <h1 className="text-4xl font-semibold mb-4">Project</h1>
-        <Simulation
-          nodeOptions={workerNodeOptions}
-          modelOptions={modelOptions}
-        />
-        <AddSimulation />
-      </div>
+      {selectedProject && (
+        <div className="p-4 sm:ml-64">
+          <h1 className="text-4xl font-semibold mb-4">
+            {selectedProject.name}
+          </h1>
+          <Simulation nodeOptions={nodeList} modelOptions={modelOptions} />
+          <AddSimulation />
+        </div>
+      )}
     </div>
   );
 }
