@@ -9,8 +9,17 @@ import Alert from "../layouts/Alert";
 import { Link } from "react-router-dom";
 import "ldrs/hourglass";
 import { ring2 } from "ldrs";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 
-function Simulation({ nodeOptions, modelOptions }) {
+function Simulation({
+  selectedProject,
+  nodeOptions,
+  modelOptions,
+  index,
+  removeSimulation,
+  onSelectOption,
+  selectSimulation,
+}) {
   const [simulation, setSimulation] = useState({});
   const [experimentOptions, setExperimentOptions] = useState([]);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
@@ -39,15 +48,14 @@ function Simulation({ nodeOptions, modelOptions }) {
   }, [status]);
 
   const getExperiments = () => {
-    getExperimentList(process.env.REACT_APP_PROJECT_ID, simulation.model).then(
-      (response) => {
-        setExperimentOptions(response.data.data);
-      }
-    );
+    getExperimentList(selectedProject.id, simulation.model).then((response) => {
+      setExperimentOptions(response.data.data);
+    });
   };
 
   const handleChange = (e) => {
-    setSimulation({ ...simulation, [e.target.name]: e.target.value });
+    console.log(e.target.name, e.target.value);
+    // setSimulation({ ...simulation, [e.target.name]: e.target.value });
   };
 
   const checkSimulationStatus = (resultId) => {
@@ -123,113 +131,53 @@ function Simulation({ nodeOptions, modelOptions }) {
 
   return (
     <>
-      <div className="block p-6 bg-white border border-gray-200 rounded-lg shadow">
+      <div className="block p-6 mb-4 bg-white border border-gray-200 rounded-lg shadow">
+        <div className="flex justify-between mb-2 items-center">
+          <span>
+            <input
+              // disabled={simulation.finalStep == null}
+              name={simulation}
+              onChange={selectSimulation}
+              type="checkbox"
+              className="cursor-pointer accent-gray-500 size-5"
+            />
+          </span>
+          <div
+            onClick={removeSimulation}
+            className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
+          >
+            <XMarkIcon className="size-6" />
+          </div>
+        </div>
+
         <div className="grid grid-cols-4 gap-4">
           <SimulationInput
             title="Node"
             name="node"
             disabled={false}
             options={nodeOptions}
-            onChange={(e) => handleChange(e)}
+            onChange={onSelectOption}
           />
           <SimulationInput
             title="Model"
             name="model"
             disabled={simulation.node == null}
             options={modelOptions}
-            onChange={(e) => handleChange(e)}
+            onChange={onSelectOption}
           />
           <SimulationInput
             title="Experiment"
             name="experiment"
             disabled={simulation.model == null}
             options={experimentOptions}
-            onChange={(e) => handleChange(e)}
+            onChange={onSelectOption}
           />
           <SimulationInput
             title="Final Step"
             name="finalStep"
             disabled={simulation.experiment == null}
-            onChange={(e) => handleChange(e)}
+            onChange={onSelectOption}
           />
-        </div>
-      </div>
-      <div className="block mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow">
-        {!waiting && (
-          <div className="w-full">
-            <div className="text-right font-medium text-lg mb-2">
-              {currentStep}/{simulation.finalStep}{" "}
-              {simulation.finalStep >= 2 ? "steps" : "step"}
-            </div>
-            <div className="w-full mb-4 bg-gray-200 rounded-full h-2">
-              <div
-                style={{ width: `${progress}%` }}
-                className="bg-blue-600 h-2 rounded-full "
-              ></div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center pr-8">
-            {isSimulationRunning && (
-              <Alert type="success" content={simulationStatus} />
-            )}
-            {!isSimulationRunning && simulationStatus && (
-              <Alert type="error" content={simulationStatus} />
-            )}
-          </div>
-          <div className="place-items-center grid grid-flow-col">
-            {!waiting && status === 3 && (
-              <>
-                <Link
-                  to={{
-                    pathname: "/view-steps",
-                  }}
-                  state={simulation}
-                >
-                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
-                    <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                      View step-by-step
-                    </span>
-                  </button>
-                </Link>
-                <Link
-                  to={{
-                    pathname: "/play-animation",
-                  }}
-                  state={simulation}
-                >
-                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
-                    <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                      Play simulaion
-                    </span>
-                  </button>
-                </Link>
-              </>
-            )}
-
-            {status !== 3 && (
-              <button
-                className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
-                disabled={disableSimulation}
-                onClick={() => runSimulationEvent()}
-              >
-                {isSimulationRunning && (
-                  <l-ring-2
-                    size="20"
-                    stroke={3}
-                    bg-opacity="0.1"
-                    speed="1"
-                    color="white"
-                  ></l-ring-2>
-                )}
-                {!isSimulationRunning
-                  ? "Run Simulation"
-                  : "Running Simulation..."}
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </>

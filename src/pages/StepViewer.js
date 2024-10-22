@@ -153,7 +153,7 @@ function StepViewer() {
       </div>
       <div className="max-w-xl mx-auto">
         {error && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-500">
+          <p className="mt-2 text-sm text-red-600">
             <span className="font-medium">
               Invalid input! Pleaase choose step between 0 and{" "}
               {simulation.finalStep}

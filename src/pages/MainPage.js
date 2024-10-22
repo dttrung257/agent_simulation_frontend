@@ -49,7 +49,7 @@ function MainPage() {
         onSelectedProject={onSelectedProject}
         modelList={modelList}
       />
-      {selectedProject && <Project selectedProject={selectedProject} />}
+      {selectedProject.id && <Project selectedProject={selectedProject} />}
     </div>
   );
 }
