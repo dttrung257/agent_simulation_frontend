@@ -19,7 +19,6 @@ function MainPage() {
   };
 
   const onSelectedProject = (e) => {
-    console.log(e.target.id);
     setSelectedProject(projectList[e.target.id]);
   };
 

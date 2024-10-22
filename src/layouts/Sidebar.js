@@ -1,5 +1,4 @@
 import { DocumentIcon } from "@heroicons/react/24/solid";
-import { useEffect } from "react";
 
 function Sidebar({
   projectList,
@@ -32,12 +31,15 @@ function Sidebar({
                   <DocumentIcon className="flex-shrink-0 size-5 text-gray-500 transition duration-75 group-hover:text-gray-900" />
                   {project.name}
                   {selectedProject.id === project.id && (
-                    <span className="flex w-3 h-3 bg-pink-200 rounded-full"></span>
+                    <span className="bg-pink-100 text-pink-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">
+                      {modelList.length}{" "}
+                      {modelList.length > 1 ? "models" : "model"}
+                    </span>
                   )}
                 </li>
                 {selectedProject.id === project.id && (
                   <>
-                    <ul className="ml-9 mr-4 h-72 overflow-auto font-medium">
+                    <ul className="ml-9 mr-4 h-64 overflow-auto font-medium">
                       {modelList.map((model, index) => {
                         return (
                           <li

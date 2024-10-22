@@ -5,7 +5,8 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
   const defaultValue =
     name !== "finalStep" ? `Select ${title.toString().toLowerCase()}` : 0;
   const [value, setValue] = useState(defaultValue);
-  const errorInputFieldMessage = "Please provide a number between 1 and 1000.";
+  const errorInputFieldMessage =
+    "Please provide a number between 1 and 100,000.";
 
   const [error, setError] = useState(errorInputFieldMessage);
 
@@ -55,7 +56,7 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
             disabled={disabled}
             value={value}
             className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            placeholder="1-1000"
+            placeholder="1-100,000"
             onChange={onChange}
             onInput={(e) => handleInputField(e)}
             required
