@@ -12,23 +12,13 @@ function Simulation({
   nodeOptions,
   modelOptions,
   index,
+  simulation,
   removeSimulation,
   isSimulationRunning,
   updateSimulation,
 }) {
   const [experimentOptions, setExperimentOptions] = useState([]);
-  const [checkInputValidation, setCheckInputValidation] = useState(false);
-  const [simulation, setSimulation] = useState({
-    nodeId: null,
-    modelId: null,
-    experimentId: null,
-    finalStep: 0,
-    waiting: true,
-    status: 0,
-    currentStep: 0,
-    progress: 0,
-    resultId: null,
-  });
+  const [currentSimulation, setCurrentSimulation] = useState(simulation);
   const [simulationStatus, setSimulationStatus] = useState("");
   const [waiting, setWaiting] = useState(true);
   const [status, setStatus] = useState(0);
@@ -39,25 +29,30 @@ function Simulation({
   ring2.register();
 
   useEffect(() => {
-    if (simulation.modelId) {
+    if (currentSimulation.modelId) {
       getExperiments();
     }
-    setSimulation({ ...simulation, experimentId: null });
+    setCurrentSimulation({ ...currentSimulation, experimentId: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [simulation.modelId]);
+  }, [currentSimulation.modelId]);
 
   useEffect(() => {
-    if (status >= 3) {
+    if (simulation.status >= 3) {
       clearInterval(interval.current);
+      return;
     }
-  }, [status]);
+    if (simulation.status < 3 && simulation.status > 0) {
+      checkSimulationStatus(simulation.resultId);
+    }
+  }, [simulation.status]);
 
   useEffect(() => {
-    updateSimulation(simulation, index);
-  }, [simulation]);
+    console.log(currentSimulation);
+    updateSimulation(currentSimulation, index);
+  }, [currentSimulation]);
 
   const getExperiments = () => {
-    getExperimentList(selectedProject.id, simulation.modelId).then(
+    getExperimentList(selectedProject.id, currentSimulation.modelId).then(
       (response) => {
         setExperimentOptions(response.data.data);
       }
@@ -72,7 +67,7 @@ function Simulation({
           setStatus(() => response.data.data.status);
           setCurrentStep(response.data.data.currentStep);
           setProgress(
-            (response.data.data.currentStep / simulation.finalStep) * 100
+            (response.data.data.currentStep / currentSimulation.finalStep) * 100
           );
           if (response.data.data.status === 3) {
             setSimulationStatus(
@@ -90,8 +85,8 @@ function Simulation({
 
   const handleChange = (e) => {
     if (e.target.name !== "finalStep") {
-      setSimulation({
-        ...simulation,
+      setCurrentSimulation({
+        ...currentSimulation,
         [e.target.name]: parseInt(e.target.value),
       });
       return;
@@ -101,13 +96,11 @@ function Simulation({
       e.target.value > 0 &&
       e.target.value <= 100000
     ) {
-      setCheckInputValidation(true);
-      setSimulation({
-        ...simulation,
+      setCurrentSimulation({
+        ...currentSimulation,
         [e.target.name]: parseInt(e.target.value),
       });
     } else {
-      setCheckInputValidation(false);
     }
   };
 
@@ -174,14 +167,6 @@ function Simulation({
         )}
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center pr-8">
-            {isSimulationRunning && (
-              <Alert type="success" content={simulationStatus} />
-            )}
-            {!isSimulationRunning && simulationStatus && (
-              <Alert type="error" content={simulationStatus} />
-            )}
-          </div>
           <div className="place-items-center grid grid-flow-col">
             {!waiting && status === 3 && (
               <>

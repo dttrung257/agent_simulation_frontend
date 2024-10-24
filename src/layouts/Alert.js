@@ -4,7 +4,7 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/solid";
 
-function Alert({ type, content }) {
+function Alert({ type, message }) {
   const style = {
     success:
       "flex items-center gap-4 p-4 text-sm text-green-800 rounded-lg bg-green-50",
@@ -20,7 +20,7 @@ function Alert({ type, content }) {
         {type === "error" && <ExclamationCircleIcon className="size-6 mr-4" />}
         {type === "info" && <InformationCircleIcon className="size-6 mr-4" />}
       </div>
-      <div>{content}</div>
+      <div>{message}</div>
     </div>
   );
 }

@@ -1,13 +1,11 @@
 import AddSimulation from "../components/AddSimulation";
 import Alert from "../layouts/Alert";
-import { Link } from "react-router-dom";
 import Simulation from "../components/Simulation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   getModelOptionsList,
   getNodeList,
   runSimulation,
-  getResultStatus,
 } from "../api/simulationApi";
 
 function Project({ selectedProject }) {
@@ -15,10 +13,10 @@ function Project({ selectedProject }) {
   const [modelOptions, setModelOptions] = useState([]);
   const [simulation, setSimulation] = useState([]);
   const [error, setError] = useState(false);
+  const [order, setOrder] = useState(1);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [disableSimulation, setDisableSimulation] = useState(false);
   const [simulationStatus, setSimulationStatus] = useState(null);
-  const interval = useRef(null);
 
   const getModelOptions = async () => {
     await getModelOptionsList(selectedProject.id, true).then((response) => {
@@ -36,17 +34,16 @@ function Project({ selectedProject }) {
     setSimulation([
       ...simulation,
       {
+        order: order,
         modelId: null,
         nodeId: null,
-        experiment: null,
         finalStep: 0,
-        waiting: true,
         status: 0,
-        currentStep: 0,
-        progress: 0,
         resultId: null,
+        finished: false,
       },
     ]);
+    setOrder(order + 1);
   };
 
   const removeSimulation = (e) => {
@@ -56,10 +53,11 @@ function Project({ selectedProject }) {
   };
 
   const runSimulationEvent = async () => {
+    console.log(simulation);
     const simulationRequests = [];
-    simulation.forEach((s, index) => {
+    simulation.forEach((s) => {
       simulationRequests.push({
-        order: index + 1,
+        order: s.order,
         nodeId: s.nodeId,
         projectId: selectedProject.id,
         experiments: [
@@ -76,9 +74,11 @@ function Project({ selectedProject }) {
         setError(false);
         response.data.data.forEach((result) => {
           const copiedSimulation = [...simulation];
+          console.log(copiedSimulation);
           const updatedSimulation = copiedSimulation.find(
             (s) => s.order === result.order
           );
+          updatedSimulation.status = 1;
           updatedSimulation.resultId = result.experimentResultId;
           setSimulation(copiedSimulation);
         });
@@ -86,7 +86,6 @@ function Project({ selectedProject }) {
         setSimulationStatus("Success! Simulation is running.");
       })
       .catch((e) => {
-        console.log(e.response.data.message);
         setError(true);
         setIsSimulationRunning(false);
         setDisableSimulation(false);
@@ -95,9 +94,11 @@ function Project({ selectedProject }) {
   };
 
   const updateSimulation = (updatedSimulation, index) => {
-    setSimulationStatus(null);
-    setError(false);
-    setSimulationStatus(null);
+    if (!isSimulationRunning) {
+      setSimulationStatus(null);
+      setError(false);
+      setSimulationStatus(null);
+    }
     const updatedSimulationRequest = simulation.map((s, i) => {
       if (i === index) {
         return updatedSimulation;
