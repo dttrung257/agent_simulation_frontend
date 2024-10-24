@@ -19,8 +19,6 @@ function Simulation({
 }) {
   const [experimentOptions, setExperimentOptions] = useState([]);
   const [currentSimulation, setCurrentSimulation] = useState(simulation);
-  const [simulationStatus, setSimulationStatus] = useState("");
-  const [waiting, setWaiting] = useState(true);
   const [status, setStatus] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -37,17 +35,17 @@ function Simulation({
   }, [currentSimulation.modelId]);
 
   useEffect(() => {
-    if (simulation.status >= 3) {
+    console.log(simulation.status);
+    if (status >= 3) {
       clearInterval(interval.current);
       return;
     }
-    if (simulation.status < 3 && simulation.status > 0) {
+    if (isSimulationRunning && simulation.status < 3 && simulation.status > 0) {
       checkSimulationStatus(simulation.resultId);
     }
-  }, [simulation.status]);
+  }, [isSimulationRunning]);
 
   useEffect(() => {
-    console.log(currentSimulation);
     updateSimulation(currentSimulation, index);
   }, [currentSimulation]);
 
@@ -63,21 +61,17 @@ function Simulation({
     interval.current = setInterval(async () => {
       await getResultStatus(resultId)
         .then((response) => {
-          setWaiting(response.data.data.waiting);
-          setStatus(() => response.data.data.status);
+          setStatus(response.data.data.status);
           setCurrentStep(response.data.data.currentStep);
           setProgress(
             (response.data.data.currentStep / currentSimulation.finalStep) * 100
           );
           if (response.data.data.status === 3) {
-            setSimulationStatus(
-              "Simulation completed successfully. Results are now ready for viewing."
-            );
+            setCurrentSimulation({ ...currentSimulation, finished: true });
           }
         })
         .catch((error) => {
           console.log(error);
-          setSimulationStatus("Run simulation failed. Please try again.");
           setStatus(4);
         });
     }, 2000);
@@ -151,9 +145,9 @@ function Simulation({
             onChange={handleChange}
           />
         </div>
-        {!waiting && (
+        {status <= 3 && status > 0 && (
           <div className="w-full">
-            <div className="text-right font-medium text-lg mb-2">
+            <div className="text-right font-medium text-lg my-2">
               {currentStep}/{simulation.finalStep}{" "}
               {simulation.finalStep >= 2 ? "steps" : "step"}
             </div>
@@ -166,9 +160,9 @@ function Simulation({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-end">
           <div className="place-items-center grid grid-flow-col">
-            {!waiting && status === 3 && (
+            {status === 3 && (
               <>
                 <Link
                   to={{

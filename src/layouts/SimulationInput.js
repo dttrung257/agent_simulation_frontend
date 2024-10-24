@@ -37,7 +37,7 @@ function SimulationInput({
         {title}
       </h2>
       <form className="w-full mb-4 mx-auto">
-        <label className="block mb-2 text-sm font-medium text-gray-900">
+        <label className="block truncate mb-2 text-sm font-medium text-gray-900">
           Choose {title.toString().toLowerCase()}
         </label>
         {name !== "finalStep" ? (

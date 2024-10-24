@@ -53,7 +53,6 @@ function Project({ selectedProject }) {
   };
 
   const runSimulationEvent = async () => {
-    console.log(simulation);
     const simulationRequests = [];
     simulation.forEach((s) => {
       simulationRequests.push({
@@ -94,6 +93,7 @@ function Project({ selectedProject }) {
   };
 
   const updateSimulation = (updatedSimulation, index) => {
+    console.log(updatedSimulation);
     if (!isSimulationRunning) {
       setSimulationStatus(null);
       setError(false);
