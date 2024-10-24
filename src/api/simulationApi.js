@@ -24,8 +24,10 @@ export const getExperimentList = async (projectId, modelId) => {
   );
 };
 
-export const runSimulation = async (simulationInfo) => {
-  return await axiosInstance.post("/simulations/cluster", simulationInfo);
+export const runSimulation = async (simulationRequests) => {
+  return await axiosInstance.post("/simulations/cluster", {
+    simulationRequests: simulationRequests,
+  });
 };
 
 export const getResultStatus = async (resultId) => {

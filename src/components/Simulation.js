@@ -1,10 +1,6 @@
 import SimulationInput from "../layouts/SimulationInput";
 import { useEffect, useRef, useState } from "react";
-import {
-  getExperimentList,
-  runSimulation,
-  getResultStatus,
-} from "../api/simulationApi";
+import { getExperimentList, getResultStatus } from "../api/simulationApi";
 import Alert from "../layouts/Alert";
 import { Link } from "react-router-dom";
 import "ldrs/hourglass";
@@ -17,18 +13,27 @@ function Simulation({
   modelOptions,
   index,
   removeSimulation,
-  selectSimulation,
+  isSimulationRunning,
+  updateSimulation,
 }) {
   const [experimentOptions, setExperimentOptions] = useState([]);
   const [checkInputValidation, setCheckInputValidation] = useState(false);
-  const [simulation, setSimulation] = useState({});
-  const [isSimulationRunning, setIsSimulationRunning] = useState(false);
+  const [simulation, setSimulation] = useState({
+    nodeId: null,
+    modelId: null,
+    experimentId: null,
+    finalStep: 0,
+    waiting: true,
+    status: 0,
+    currentStep: 0,
+    progress: 0,
+    resultId: null,
+  });
   const [simulationStatus, setSimulationStatus] = useState("");
   const [waiting, setWaiting] = useState(true);
   const [status, setStatus] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [checked, setChecked] = useState(false);
   const interval = useRef(null);
 
   ring2.register();
@@ -37,7 +42,7 @@ function Simulation({
     if (simulation.modelId) {
       getExperiments();
     }
-
+    setSimulation({ ...simulation, experimentId: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [simulation.modelId]);
 
@@ -47,35 +52,16 @@ function Simulation({
     }
   }, [status]);
 
+  useEffect(() => {
+    updateSimulation(simulation, index);
+  }, [simulation]);
+
   const getExperiments = () => {
     getExperimentList(selectedProject.id, simulation.modelId).then(
       (response) => {
         setExperimentOptions(response.data.data);
       }
     );
-  };
-
-  const handleChange = (e) => {
-    if (e.target.name !== "finalStep") {
-      setSimulation({
-        ...simulation,
-        [e.target.name]: parseInt(e.target.value),
-      });
-      return;
-    }
-    if (
-      e.target.name === "finalStep" &&
-      e.target.value > 0 &&
-      e.target.value <= 100000
-    ) {
-      setCheckInputValidation(true);
-      setSimulation({
-        ...simulation,
-        [e.target.name]: parseInt(e.target.value),
-      });
-    } else {
-      setCheckInputValidation(false);
-    }
   };
 
   const checkSimulationStatus = (resultId) => {
@@ -102,67 +88,33 @@ function Simulation({
     }, 2000);
   };
 
-  // const runSimulationEvent = async () => {
-  //   console.log("Run simulation");
-  //   setDisableSimulation(true);
-  //   const experiments = [];
-  //   const experiment = {
-  //     id: simulation.experiment,
-  //     modelId: simulation.model,
-  //     finalStep: simulation.finalStep,
-  //   };
-  //   experiments.push(experiment);
-  //   const projectId = process.env.REACT_APP_PROJECT_ID;
-  //   const simulationInfo = {
-  //     simulationRequests: [
-  //       {
-  //         nodeId: simulation.node,
-  //         projectId: projectId,
-  //         experiments: [
-  //           {
-  //             id: simulation.experiment,
-  //             modelId: simulation.model,
-  //             finalStep: simulation.finalStep,
-  //           },
-  //         ],
-  //       },
-  //     ],
-  //   };
-  //   setIsSimulationRunning(true);
-  //   console.log(simulationInfo);
-  //   await runSimulation(simulationInfo)
-  //     .then((response) => {
-  //       setIsSimulationRunning(true);
-  //       setSimulationStatus("Success! Simulation is running.");
-  //       setSimulation({
-  //         ...simulation,
-  //         resultId: response.data.data[0].experimentResultId,
-  //       });
-  //       checkSimulationStatus(response.data.data[0].experimentResultId);
-  //     })
-  //     .catch((error) => {
-  //       error = true;
-  //       setIsSimulationRunning(false);
-  //       setSimulationStatus(error.response.data.message);
-  //       setDisableSimulation(false);
-  //       console.log(simulationStatus);
-  //     });
-  // };
+  const handleChange = (e) => {
+    if (e.target.name !== "finalStep") {
+      setSimulation({
+        ...simulation,
+        [e.target.name]: parseInt(e.target.value),
+      });
+      return;
+    }
+    if (
+      e.target.name === "finalStep" &&
+      e.target.value > 0 &&
+      e.target.value <= 100000
+    ) {
+      setCheckInputValidation(true);
+      setSimulation({
+        ...simulation,
+        [e.target.name]: parseInt(e.target.value),
+      });
+    } else {
+      setCheckInputValidation(false);
+    }
+  };
 
   return (
     <>
       <div className="block p-6 mb-4 bg-white border border-gray-200 rounded-lg shadow">
-        <div className="flex justify-between mb-2 items-center">
-          <span>
-            <input
-              disabled={!checkInputValidation || simulation.finalStep == null}
-              name={JSON.stringify(simulation)}
-              value={index}
-              onChange={selectSimulation}
-              type="checkbox"
-              className="cursor-pointer disabled:cursor-not-allowed accent-gray-500 size-5"
-            />
-          </span>
+        <div className="flex justify-end mb-2 items-center">
           <button
             onClick={removeSimulation}
             value={index}
@@ -179,6 +131,7 @@ function Simulation({
             title="Node"
             name="nodeId"
             disabled={false}
+            currentValue={simulation.nodeId}
             options={nodeOptions}
             onChange={handleChange}
           />
@@ -186,20 +139,22 @@ function Simulation({
             title="Model"
             name="modelId"
             disabled={simulation.nodeId == null}
+            currentValue={simulation.modelId}
             options={modelOptions}
             onChange={handleChange}
           />
           <SimulationInput
             title="Experiment"
-            name="experiment"
+            name="experimentId"
             disabled={simulation.modelId == null}
+            currentValue={simulation.experimentId}
             options={experimentOptions}
             onChange={handleChange}
           />
           <SimulationInput
             title="Final Step"
             name="finalStep"
-            disabled={simulation.experiment == null}
+            currentValue={simulation.finalStep}
             onChange={handleChange}
           />
         </div>

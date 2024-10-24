@@ -1,12 +1,24 @@
 import { useState } from "react";
-import Alert from "./Alert";
 
-function SimulationInput({ title, disabled, options, name, onChange }) {
+function SimulationInput({
+  title,
+  currentValue,
+  disabled,
+  options,
+  name,
+  onChange,
+}) {
   const defaultValue =
     name !== "finalStep" ? `Select ${title.toString().toLowerCase()}` : 0;
   const [value, setValue] = useState(defaultValue);
   const errorInputFieldMessage =
     "Please provide a number between 1 and 100,000.";
+  const errorInputFormat =
+    "bg-red-50 border border-red-500 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 focus:border-red-500 block w-full p-2.5";
+  const validInputFormat =
+    "bg-green-50 border border-green-500 text-green-900 placeholder-green-700 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-2.5";
+  const defaultInputFormat =
+    "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5";
 
   const [error, setError] = useState(errorInputFieldMessage);
 
@@ -33,11 +45,14 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
             disabled={disabled}
             defaultValue={`Select ${title.toString().toLowerCase()}`}
             onChange={onChange}
+            value={value}
             name={name}
             onInput={(e) => {
               setValue(e.target.value);
             }}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+            className={
+              currentValue === null ? defaultInputFormat : validInputFormat
+            }
           >
             <option hidden key="title">
               {defaultValue}
@@ -50,44 +65,36 @@ function SimulationInput({ title, disabled, options, name, onChange }) {
               ))}
           </select>
         ) : (
-          <input
-            type="number"
-            name={name}
-            disabled={disabled}
-            value={value}
-            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-            placeholder="1-100,000"
-            onChange={onChange}
-            onInput={(e) => handleInputField(e)}
-            required
-          />
+          <>
+            <input
+              type="number"
+              name={name}
+              value={value}
+              className={
+                value === defaultValue
+                  ? defaultInputFormat
+                  : value > 0 && value <= 100000
+                  ? validInputFormat
+                  : errorInputFormat
+              }
+              placeholder="1-100,000"
+              onChange={onChange}
+              onInput={(e) => handleInputField(e)}
+              required
+            />
+            {(value < 1 || value > 100000) && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-500">
+                Please enter number between{" "}
+                <span className="font-medium">1-100,000</span>
+              </p>
+            )}
+          </>
         )}
       </form>
 
-      {!disabled && value === defaultValue && name !== "finalStep" && (
-        <Alert
-          type="error"
-          content="Please provide your details in the input field."
-        />
-      )}
-
-      {!disabled && value !== defaultValue && name !== "finalStep" && (
-        <Alert
-          type="success"
-          content="Your selection/input is complete. Proceed to the next section."
-        />
-      )}
-
-      {!disabled && error === "No Error" && name === "finalStep" && (
-        <Alert
-          type="success"
-          content="Your selection/input is complete. Proceed to the next section."
-        />
-      )}
-
       {!disabled &&
         error === errorInputFieldMessage &&
-        name === "finalStep" && <Alert type="error" content={error} />}
+        name === "finalStep" && <></>}
     </div>
   );
 }

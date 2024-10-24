@@ -4,22 +4,20 @@ import { Link } from "react-router-dom";
 import Simulation from "../components/Simulation";
 import { useEffect, useState, useRef } from "react";
 import {
-  getModelList,
   getModelOptionsList,
   getNodeList,
+  runSimulation,
+  getResultStatus,
 } from "../api/simulationApi";
 
 function Project({ selectedProject }) {
   const [nodeList, setNodeList] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
   const [simulation, setSimulation] = useState([]);
-  const [selectedSimulation, setSelectedSimulation] = useState([]);
+  const [error, setError] = useState(false);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [disableSimulation, setDisableSimulation] = useState(false);
-  const [waiting, setWaiting] = useState(true);
-  const [status, setStatus] = useState(0);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [progress, setProgress] = useState(0);
+  const [simulationStatus, setSimulationStatus] = useState(null);
   const interval = useRef(null);
 
   const getModelOptions = async () => {
@@ -53,26 +51,60 @@ function Project({ selectedProject }) {
 
   const removeSimulation = (e) => {
     const removeIndex = parseInt(e.currentTarget.value);
+    setSimulationStatus(null);
     setSimulation(simulation.filter((_, index) => index !== removeIndex));
-    setSelectedSimulation(
-      selectedSimulation.filter((_, i) => i !== removeIndex)
-    );
   };
 
   const runSimulationEvent = async () => {
-    console.log(selectedSimulation);
+    const simulationRequests = [];
+    simulation.forEach((s, index) => {
+      simulationRequests.push({
+        order: index + 1,
+        nodeId: s.nodeId,
+        projectId: selectedProject.id,
+        experiments: [
+          { id: s.experimentId, modelId: s.modelId, finalStep: s.finalStep },
+        ],
+      });
+    });
+
+    setDisableSimulation(true);
+    setIsSimulationRunning(true);
+    await runSimulation(simulationRequests)
+      .then((response) => {
+        setSimulationStatus("Success! Simulation is running.");
+        setError(false);
+        response.data.data.forEach((result) => {
+          const copiedSimulation = [...simulation];
+          const updatedSimulation = copiedSimulation.find(
+            (s) => s.order === result.order
+          );
+          updatedSimulation.resultId = result.experimentResultId;
+          setSimulation(copiedSimulation);
+        });
+        setIsSimulationRunning(true);
+        setSimulationStatus("Success! Simulation is running.");
+      })
+      .catch((e) => {
+        console.log(e.response.data.message);
+        setError(true);
+        setIsSimulationRunning(false);
+        setDisableSimulation(false);
+        setSimulationStatus(e.response.data.message);
+      });
   };
 
-  const selectSimulation = (e) => {
-    const checked = e.currentTarget.checked;
-    const index = parseInt(e.currentTarget.value);
-
-    if (checked) {
-      const simulationSelected = JSON.parse(e.currentTarget.name);
-      setSelectedSimulation([...selectedSimulation, simulationSelected]);
-    } else {
-      setSelectedSimulation(selectedSimulation.filter((_, i) => i !== index));
-    }
+  const updateSimulation = (updatedSimulation, index) => {
+    setSimulationStatus(null);
+    setError(false);
+    setSimulationStatus(null);
+    const updatedSimulationRequest = simulation.map((s, i) => {
+      if (i === index) {
+        return updatedSimulation;
+      }
+      return s;
+    });
+    setSimulation(updatedSimulationRequest);
   };
 
   useEffect(() => {
@@ -95,10 +127,12 @@ function Project({ selectedProject }) {
                     key={index}
                     index={index}
                     selectedProject={selectedProject}
+                    simulation={s}
                     nodeOptions={nodeList}
                     modelOptions={modelOptions}
-                    selectSimulation={selectSimulation}
                     removeSimulation={removeSimulation}
+                    isSimulationRunning={isSimulationRunning}
+                    updateSimulation={updateSimulation}
                   />
                 );
               })}
@@ -109,39 +143,42 @@ function Project({ selectedProject }) {
         <div className="p-4 w-screen border">
           <footer className="static block p-4 sm:ml-64 bottom-0 text-black border-t border border-gray-200 rounded-lg shadow">
             <div className="flex justify-between items-center">
-              {status !== 3 && (
-                <>
+              <div>
+                {!isSimulationRunning && simulationStatus === null && (
                   <span>
-                    {selectedSimulation.length > 0 && (
-                      <span class="bg-indigo-100 text-indigo-800 text-xl font-medium px-2.5 py-0.5 rounded">
-                        {selectedSimulation.length}{" "}
-                        {selectedSimulation.length > 1
-                          ? "simulations"
-                          : "simulation"}{" "}
-                        selected
+                    {simulation.length > 0 && (
+                      <span className="bg-indigo-100 text-indigo-800 text-xl font-medium px-2.5 py-0.5 rounded">
+                        {simulation.length}{" "}
+                        {simulation.length > 1 ? "simulations" : "simulation"}
                       </span>
                     )}
                   </span>
-                  <button
-                    className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
-                    disabled={selectedSimulation.length === 0}
-                    onClick={() => runSimulationEvent()}
-                  >
-                    {isSimulationRunning && (
-                      <l-ring-2
-                        size="20"
-                        stroke={3}
-                        bg-opacity="0.1"
-                        speed="1"
-                        color="white"
-                      ></l-ring-2>
-                    )}
-                    {!isSimulationRunning
-                      ? "Run Simulation"
-                      : "Running Simulation..."}
-                  </button>
-                </>
-              )}
+                )}
+
+                {isSimulationRunning && !error && (
+                  <Alert type="success" message={simulationStatus} />
+                )}
+
+                {error && <Alert type="error" message={simulationStatus} />}
+              </div>
+              <button
+                className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
+                disabled={simulation.length === 0 || disableSimulation}
+                onClick={() => runSimulationEvent()}
+              >
+                {isSimulationRunning && (
+                  <l-ring-2
+                    size="20"
+                    stroke={3}
+                    bg-opacity="0.1"
+                    speed="1"
+                    color="white"
+                  ></l-ring-2>
+                )}
+                {!isSimulationRunning
+                  ? "Run Simulation"
+                  : "Running Simulation..."}
+              </button>
             </div>
           </footer>
         </div>
