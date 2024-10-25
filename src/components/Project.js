@@ -1,19 +1,22 @@
-import AddSimulation from "../components/AddSimulation";
+import AddSimulation from "./AddSimulation";
 import Alert from "../layouts/Alert";
-import Simulation from "../components/Simulation";
+import { Link } from "react-router-dom";
+import Simulation from "./Simulation";
 import { useEffect, useState } from "react";
 import {
   getModelOptionsList,
   getNodeList,
   runSimulation,
+  getResultStatus,
 } from "../api/simulationApi";
 
 function Project({ selectedProject }) {
   const [nodeList, setNodeList] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
+  const [order, setOrder] = useState(1);
   const [simulation, setSimulation] = useState([]);
   const [error, setError] = useState(false);
-  const [order, setOrder] = useState(1);
+  const [checkFinish, setCheckFinish] = useState(0);
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [disableSimulation, setDisableSimulation] = useState(false);
   const [simulationStatus, setSimulationStatus] = useState(null);
@@ -37,10 +40,13 @@ function Project({ selectedProject }) {
         order: order,
         modelId: null,
         nodeId: null,
+        experiment: null,
         finalStep: 0,
+        waiting: true,
         status: 0,
+        currentStep: 0,
+        progress: 0,
         resultId: null,
-        finished: false,
       },
     ]);
     setOrder(order + 1);
@@ -66,25 +72,24 @@ function Project({ selectedProject }) {
     });
 
     setDisableSimulation(true);
-    setIsSimulationRunning(true);
     await runSimulation(simulationRequests)
       .then((response) => {
         setSimulationStatus("Success! Simulation is running.");
         setError(false);
         response.data.data.forEach((result) => {
           const copiedSimulation = [...simulation];
-          console.log(copiedSimulation);
           const updatedSimulation = copiedSimulation.find(
             (s) => s.order === result.order
           );
-          updatedSimulation.status = 1;
           updatedSimulation.resultId = result.experimentResultId;
+          updatedSimulation.status = 1;
           setSimulation(copiedSimulation);
         });
         setIsSimulationRunning(true);
         setSimulationStatus("Success! Simulation is running.");
       })
       .catch((e) => {
+        console.log(e);
         setError(true);
         setIsSimulationRunning(false);
         setDisableSimulation(false);
@@ -93,12 +98,9 @@ function Project({ selectedProject }) {
   };
 
   const updateSimulation = (updatedSimulation, index) => {
-    console.log(updatedSimulation);
-    if (!isSimulationRunning) {
-      setSimulationStatus(null);
-      setError(false);
-      setSimulationStatus(null);
-    }
+    setSimulationStatus(null);
+    setError(false);
+    setSimulationStatus(null);
     const updatedSimulationRequest = simulation.map((s, i) => {
       if (i === index) {
         return updatedSimulation;
@@ -106,6 +108,10 @@ function Project({ selectedProject }) {
       return s;
     });
     setSimulation(updatedSimulationRequest);
+  };
+
+  const checkSimulationFinish = () => {
+    setCheckFinish(checkFinish + 1);
   };
 
   useEffect(() => {
@@ -134,55 +140,60 @@ function Project({ selectedProject }) {
                     removeSimulation={removeSimulation}
                     isSimulationRunning={isSimulationRunning}
                     updateSimulation={updateSimulation}
+                    checkSimulationFinish={checkSimulationFinish}
                   />
                 );
               })}
-              <AddSimulation onClick={addSimulation} />
+              {!isSimulationRunning && (
+                <AddSimulation onClick={addSimulation} />
+              )}
             </div>
           </>
         )}
-        <div className="p-4 w-screen border">
-          <footer className="static block p-4 sm:ml-64 bottom-0 text-black border-t border border-gray-200 rounded-lg shadow">
-            <div className="flex justify-between items-center">
-              <div>
-                {!isSimulationRunning && simulationStatus === null && (
-                  <span>
-                    {simulation.length > 0 && (
-                      <span className="bg-indigo-100 text-indigo-800 text-xl font-medium px-2.5 py-0.5 rounded">
-                        {simulation.length}{" "}
-                        {simulation.length > 1 ? "simulations" : "simulation"}
-                      </span>
-                    )}
-                  </span>
-                )}
+        {(!isSimulationRunning || checkFinish !== simulation.length) && (
+          <div className="p-4 w-screen border">
+            <footer className="static block p-4 sm:ml-64 bottom-0 text-black border-t border border-gray-200 rounded-lg shadow">
+              <div className="flex justify-between items-center">
+                <div>
+                  {!isSimulationRunning && simulationStatus === null && (
+                    <span>
+                      {simulation.length > 0 && (
+                        <span className="bg-indigo-100 text-indigo-800 text-xl font-medium px-2.5 py-0.5 rounded">
+                          {simulation.length}{" "}
+                          {simulation.length > 1 ? "simulations" : "simulation"}
+                        </span>
+                      )}
+                    </span>
+                  )}
 
-                {isSimulationRunning && !error && (
-                  <Alert type="success" message={simulationStatus} />
-                )}
+                  {isSimulationRunning && !error && (
+                    <Alert type="success" message={simulationStatus} />
+                  )}
 
-                {error && <Alert type="error" message={simulationStatus} />}
+                  {error && <Alert type="error" message={simulationStatus} />}
+                </div>
+                <button
+                  className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
+                  disabled={simulation.length === 0 || disableSimulation}
+                  onClick={() => runSimulationEvent()}
+                >
+                  {isSimulationRunning && (
+                    <l-ring-2
+                      size="20"
+                      stroke={3}
+                      bg-opacity="0.1"
+                      speed="1"
+                      color="white"
+                    ></l-ring-2>
+                  )}
+                  {!isSimulationRunning
+                    ? "Run Simulation"
+                    : "Running Simulation..."}
+                </button>
               </div>
-              <button
-                className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
-                disabled={simulation.length === 0 || disableSimulation}
-                onClick={() => runSimulationEvent()}
-              >
-                {isSimulationRunning && (
-                  <l-ring-2
-                    size="20"
-                    stroke={3}
-                    bg-opacity="0.1"
-                    speed="1"
-                    color="white"
-                  ></l-ring-2>
-                )}
-                {!isSimulationRunning
-                  ? "Run Simulation"
-                  : "Running Simulation..."}
-              </button>
-            </div>
-          </footer>
-        </div>
+            </footer>
+          </div>
+        )}
       </div>
     </>
   );

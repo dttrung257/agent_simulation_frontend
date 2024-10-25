@@ -1,7 +1,7 @@
 import Sidebar from "../layouts/Sidebar";
 import { useEffect, useState } from "react";
 import { getProjectList, getModelList } from "../api/simulationApi";
-import Project from "./Project";
+import Project from "../components/Project";
 
 function MainPage() {
   const [projectList, setProjectList] = useState([]);

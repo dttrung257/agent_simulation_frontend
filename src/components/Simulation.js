@@ -1,7 +1,6 @@
 import SimulationInput from "../layouts/SimulationInput";
 import { useEffect, useRef, useState } from "react";
 import { getExperimentList, getResultStatus } from "../api/simulationApi";
-import Alert from "../layouts/Alert";
 import { Link } from "react-router-dom";
 import "ldrs/hourglass";
 import { ring2 } from "ldrs";
@@ -16,11 +15,11 @@ function Simulation({
   removeSimulation,
   isSimulationRunning,
   updateSimulation,
+  checkSimulationFinish,
 }) {
   const [experimentOptions, setExperimentOptions] = useState([]);
   const [currentSimulation, setCurrentSimulation] = useState(simulation);
-  const [status, setStatus] = useState(0);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(null);
   const [progress, setProgress] = useState(0);
   const interval = useRef(null);
 
@@ -35,15 +34,16 @@ function Simulation({
   }, [currentSimulation.modelId]);
 
   useEffect(() => {
-    console.log(simulation.status);
-    if (status >= 3) {
+    if (currentStep === currentSimulation.finalStep) {
+      checkSimulationFinish();
       clearInterval(interval.current);
       return;
     }
-    if (isSimulationRunning && simulation.status < 3 && simulation.status > 0) {
+    if (isSimulationRunning && currentStep === null) {
+      console.log("Run check");
       checkSimulationStatus(simulation.resultId);
     }
-  }, [isSimulationRunning]);
+  }, [isSimulationRunning, currentStep]);
 
   useEffect(() => {
     updateSimulation(currentSimulation, index);
@@ -61,18 +61,13 @@ function Simulation({
     interval.current = setInterval(async () => {
       await getResultStatus(resultId)
         .then((response) => {
-          setStatus(response.data.data.status);
           setCurrentStep(response.data.data.currentStep);
           setProgress(
             (response.data.data.currentStep / currentSimulation.finalStep) * 100
           );
-          if (response.data.data.status === 3) {
-            setCurrentSimulation({ ...currentSimulation, finished: true });
-          }
         })
         .catch((error) => {
           console.log(error);
-          setStatus(4);
         });
     }, 2000);
   };
@@ -145,9 +140,9 @@ function Simulation({
             onChange={handleChange}
           />
         </div>
-        {status <= 3 && status > 0 && (
+        {currentStep !== null && (
           <div className="w-full">
-            <div className="text-right font-medium text-lg my-2">
+            <div className="text-right font-medium text-lg mb-2 mt-4">
               {currentStep}/{simulation.finalStep}{" "}
               {simulation.finalStep >= 2 ? "steps" : "step"}
             </div>
@@ -161,8 +156,8 @@ function Simulation({
         )}
 
         <div className="flex items-center justify-end">
-          <div className="place-items-center grid grid-flow-col">
-            {status === 3 && (
+          <div className="place-items-center gap-4 grid grid-flow-col">
+            {currentStep === currentSimulation.finalStep && (
               <>
                 <Link
                   to={{
@@ -170,7 +165,7 @@ function Simulation({
                   }}
                   state={simulation}
                 >
-                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
+                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
                     <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
                       View step-by-step
                     </span>
@@ -182,7 +177,7 @@ function Simulation({
                   }}
                   state={simulation}
                 >
-                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 me-2 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
+                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
                     <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
                       Play simulation
                     </span>
