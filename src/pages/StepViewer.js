@@ -1,5 +1,4 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   getImageResultFromRange,
@@ -12,10 +11,12 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 function StepViewer() {
-  const simulation = useLocation().state;
+  const { resultId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const finalStep = parseInt(searchParams.get("finalStep"));
   const [currentStep, setCurrentStep] = useState(0);
   const [categoryId, setCategoryId] = useState([]);
   const [inputStep, setInputStep] = useState(0);
@@ -29,7 +30,7 @@ function StepViewer() {
   useEffect(() => {
     if (currentStep === 0) {
       const getCategories = async () => {
-        await getCategoriesResult(simulation.resultId).then((response) => {
+        await getCategoriesResult(resultId).then((response) => {
           response.data.data.forEach((category, id) => {
             setCategoryId((categoryId) => [
               ...categoryId,
@@ -45,27 +46,25 @@ function StepViewer() {
   const getImages = async () => {
     if (categoryId.length !== 0) {
       setLoading(true);
-      await getImageResultFromRange(
-        simulation.resultId,
-        currentStep,
-        currentStep
-      ).then((response) => {
-        response.data.data.steps.forEach((step, id) => {
-          step.categories.forEach((category, id) => {
-            const categoryName = categoryId.find(
-              (categoryName) => categoryName.id === category.categoryId
-            ).name;
-            setImages((images) => [
-              ...images,
-              {
-                id: category.categoryId,
-                encodedImage: category.encodedImage,
-                name: categoryName,
-              },
-            ]);
+      await getImageResultFromRange(resultId, currentStep, currentStep).then(
+        (response) => {
+          response.data.data.steps.forEach((step, id) => {
+            step.categories.forEach((category, id) => {
+              const categoryName = categoryId.find(
+                (categoryName) => categoryName.id === category.categoryId
+              ).name;
+              setImages((images) => [
+                ...images,
+                {
+                  id: category.categoryId,
+                  encodedImage: category.encodedImage,
+                  name: categoryName,
+                },
+              ]);
+            });
           });
-        });
-      });
+        }
+      );
     }
     setLoading(false);
   };
@@ -81,7 +80,7 @@ function StepViewer() {
   };
 
   const handleStepInput = () => {
-    if (inputStep > parseInt(simulation.finalStep) - 1) {
+    if (inputStep > parseInt(finalStep) - 1 || inputStep < 0) {
       setError(true);
       return;
     }
@@ -120,7 +119,7 @@ function StepViewer() {
         <button
           type="button"
           onClick={() => {
-            if (currentStep < parseInt(simulation.finalStep) - 1) {
+            if (currentStep < parseInt(finalStep) - 1) {
               setCurrentStep(currentStep + 1);
             }
           }}
@@ -140,7 +139,7 @@ function StepViewer() {
           value={inputStep}
           onChange={(e) => handleChange(e)}
           className="block w-full p-4 ps-10 text-md text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-50"
-          placeholder={`Step 0 to ${simulation.finalStep - 1}`}
+          placeholder={`Step 0 to ${finalStep - 1}`}
           required
         />
         <button
@@ -155,8 +154,7 @@ function StepViewer() {
         {error && (
           <p className="mt-2 text-sm text-red-600">
             <span className="font-medium">
-              Invalid input! Pleaase choose step between 0 and{" "}
-              {simulation.finalStep}
+              Invalid input! Please choose step between 0 and {finalStep - 1}
             </span>{" "}
           </p>
         )}
@@ -172,7 +170,7 @@ function StepViewer() {
         <div className="flex flex-wrap gap-6 items-center place-content-center mx-4 my-12">
           {images.map((image, index) => {
             return (
-              <div>
+              <div key={index}>
                 <div className="mx-auto bg-white border w-fit p-5 border-gray-300 rounded-lg shadow-xl">
                   <img
                     alt={image.name}

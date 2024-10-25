@@ -61,7 +61,9 @@ function Simulation({
     interval.current = setInterval(async () => {
       await getResultStatus(resultId)
         .then((response) => {
-          setCurrentStep(response.data.data.currentStep);
+          if (response.data.data.currentStep !== null) {
+            setCurrentStep(response.data.data.currentStep);
+          }
           setProgress(
             (response.data.data.currentStep / currentSimulation.finalStep) * 100
           );
@@ -96,17 +98,19 @@ function Simulation({
   return (
     <>
       <div className="block p-6 mb-4 bg-white border border-gray-200 rounded-lg shadow">
-        <div className="flex justify-end mb-2 items-center">
-          <button
-            onClick={removeSimulation}
-            value={index}
-            className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
-          >
-            <div>
-              <XMarkIcon value={index} className="size-6" />
-            </div>
-          </button>
-        </div>
+        {!isSimulationRunning && (
+          <div className="flex justify-end mb-2 items-center">
+            <button
+              onClick={removeSimulation}
+              value={index}
+              className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
+            >
+              <div>
+                <XMarkIcon value={index} className="size-6" />
+              </div>
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-4 gap-4">
           <SimulationInput
@@ -161,9 +165,11 @@ function Simulation({
               <>
                 <Link
                   to={{
-                    pathname: "/view-steps",
+                    pathname: `/result/${simulation.resultId}/view-steps`,
+                    search: `?finalStep=${simulation.finalStep}`,
                   }}
-                  state={simulation}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
                     <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
@@ -173,9 +179,11 @@ function Simulation({
                 </Link>
                 <Link
                   to={{
-                    pathname: "/play-animation",
+                    pathname: `/result/${simulation.resultId}/play-animation`,
+                    search: `?finalStep=${simulation.finalStep}`,
                   }}
-                  state={simulation}
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
                     <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">

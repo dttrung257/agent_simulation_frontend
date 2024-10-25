@@ -7,8 +7,11 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<MainPage />} />
-      <Route path="/view-steps" element={<StepViewer />} />
-      <Route path="/play-animation" element={<AnimationPlayer />} />
+      <Route path="/result/:resultId/view-steps" element={<StepViewer />} />
+      <Route
+        path="/result/:resultId/play-animation"
+        element={<AnimationPlayer />}
+      />
     </Routes>
   );
 }

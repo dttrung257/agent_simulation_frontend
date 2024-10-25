@@ -6,11 +6,12 @@ import {
 } from "../api/simulationApi";
 import { PlayIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 function AnimationPlayer() {
-  const data = useLocation();
-  const simulation = data.state;
+  const { resultId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const finalStep = parseInt(searchParams.get("finalStep"));
   const [currentStep, setCurrentStep] = useState(-1);
   const [endStep, setEndStep] = useState(0);
   const [images, setImages] = useState([]);
@@ -23,9 +24,9 @@ function AnimationPlayer() {
   quantum.register();
 
   useEffect(() => {
-    setEndStep(simulation.finalStep);
+    setEndStep(finalStep);
     const getCategories = async () => {
-      await getCategoriesResult(simulation.resultId).then((response) => {
+      await getCategoriesResult(resultId).then((response) => {
         setSimulationCategoryId(
           response.data.data.find((category) =>
             category.name.startsWith("Simulator")
@@ -47,7 +48,7 @@ function AnimationPlayer() {
   }, [simulationCategoryId]);
 
   useEffect(() => {
-    if (images.length == simulation.finalStep) {
+    if (images.length == finalStep) {
       setLoading(false);
     }
   }, [images.length]);
@@ -65,7 +66,6 @@ function AnimationPlayer() {
         }
       }
     }
-    const finalStep = parseInt(simulation.finalStep);
 
     if (currentStep + 1 === finalStep && interval.current) {
       clearInterval(interval.current);
@@ -73,19 +73,17 @@ function AnimationPlayer() {
   }, [play, currentStep]);
 
   const getImages = async () => {
-    await getImageResultFromRange(
-      simulation.resultId,
-      currentStep,
-      endStep
-    ).then((response) => {
-      response.data.data.steps.forEach((step, id) => {
-        step.categories.forEach((category, id) => {
-          if (category.categoryId === simulationCategoryId) {
-            setImages((images) => [...images, category.encodedImage]);
-          }
+    await getImageResultFromRange(resultId, currentStep, endStep).then(
+      (response) => {
+        response.data.data.steps.forEach((step, id) => {
+          step.categories.forEach((category, id) => {
+            if (category.categoryId === simulationCategoryId) {
+              setImages((images) => [...images, category.encodedImage]);
+            }
+          });
         });
-      });
-    });
+      }
+    );
   };
 
   const playSimulation = (imagePlayer) => {
