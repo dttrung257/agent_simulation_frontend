@@ -7,6 +7,7 @@ function Sidebar({
   modelList,
 }) {
   return (
+    <>
     <aside
       className="fixed top-0 left-0 z-40 w-64 h-screen bg-gray-50 transition-transform -translate-x-full sm:translate-x-0"
       aria-label="Sidebar"
@@ -20,7 +21,7 @@ function Sidebar({
         <ul className="mx-4 font-medium">
           {Array.from(projectList).map((project, index) => {
             return (
-              <>
+              <div key={project.id}>
                 <li
                   className="flex cursor-pointer items-center p-2 gap-4 text-gray-900 rounded-lg hover:bg-gray-100 group"
                   onClick={onSelectedProject}
@@ -39,14 +40,14 @@ function Sidebar({
                 </li>
                 {selectedProject.id === project.id && (
                   <>
-                    <ul className="ml-9 mr-4 h-64 overflow-auto font-medium">
+                    <ul className="ml-9 mr-4 h-80 overflow-auto font-medium">
                       {modelList.map((model, index) => {
                         return (
                           <li
                             className="flex items-center p-2 gap-4 text-gray-900"
                             id={index}
                             value={model.id}
-                            key={index}
+                            key={model.id}
                           >
                             {model.name}
                           </li>
@@ -55,12 +56,13 @@ function Sidebar({
                     </ul>
                   </>
                 )}
-              </>
+              </div>
             );
           })}
         </ul>
       </div>
     </aside>
+    </>
   );
 }
 

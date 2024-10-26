@@ -10,7 +10,6 @@ function Simulation({
   selectedProject,
   nodeOptions,
   modelOptions,
-  index,
   simulation,
   removeSimulation,
   isSimulationRunning,
@@ -40,13 +39,12 @@ function Simulation({
       return;
     }
     if (isSimulationRunning && currentStep === null) {
-      console.log("Run check");
       checkSimulationStatus(simulation.resultId);
     }
   }, [isSimulationRunning, currentStep]);
 
   useEffect(() => {
-    updateSimulation(currentSimulation, index);
+    updateSimulation(currentSimulation, simulation.order);
   }, [currentSimulation]);
 
   const getExperiments = () => {
@@ -96,17 +94,17 @@ function Simulation({
   };
 
   return (
-    <>
+    <div key={simulation.order}>
       <div className="block p-6 mb-4 bg-white border border-gray-200 rounded-lg shadow">
         {!isSimulationRunning && (
           <div className="flex justify-end mb-2 items-center">
             <button
               onClick={removeSimulation}
-              value={index}
+              value={simulation.order}
               className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
             >
               <div>
-                <XMarkIcon value={index} className="size-6" />
+                <XMarkIcon value={simulation.order} className="size-6" />
               </div>
             </button>
           </div>
@@ -120,6 +118,7 @@ function Simulation({
             currentValue={simulation.nodeId}
             options={nodeOptions}
             onChange={handleChange}
+            isSimulationRunning={isSimulationRunning}
           />
           <SimulationInput
             title="Model"
@@ -136,12 +135,14 @@ function Simulation({
             currentValue={simulation.experimentId}
             options={experimentOptions}
             onChange={handleChange}
+            isSimulationRunning={isSimulationRunning}
           />
           <SimulationInput
             title="Final Step"
             name="finalStep"
             currentValue={simulation.finalStep}
             onChange={handleChange}
+            isSimulationRunning={isSimulationRunning}
           />
         </div>
         {currentStep !== null && (
@@ -196,7 +197,7 @@ function Simulation({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -9,6 +9,7 @@ import {
   runSimulation,
   getResultStatus,
 } from "../api/simulationApi";
+import { ArrowPathIcon } from "@heroicons/react/24/solid";
 
 function Project({ selectedProject }) {
   const [nodeList, setNodeList] = useState([]);
@@ -40,7 +41,6 @@ function Project({ selectedProject }) {
         order: order,
         modelId: null,
         nodeId: null,
-        experiment: null,
         finalStep: 0,
         waiting: true,
         status: 0,
@@ -53,9 +53,10 @@ function Project({ selectedProject }) {
   };
 
   const removeSimulation = (e) => {
-    const removeIndex = parseInt(e.currentTarget.value);
+    const orderRemove = parseInt(e.currentTarget.value);
     setSimulationStatus(null);
-    setSimulation(simulation.filter((_, index) => index !== removeIndex));
+    console.log(simulation.filter((s) => s.order !== orderRemove));
+    setSimulation(simulation.filter((s) => s.order !== orderRemove));
   };
 
   const runSimulationEvent = async () => {
@@ -82,6 +83,7 @@ function Project({ selectedProject }) {
             (s) => s.order === result.order
           );
           updatedSimulation.resultId = result.experimentResultId;
+          console.log(result.order, result.experimentResultId);
           updatedSimulation.status = 1;
           setSimulation(copiedSimulation);
         });
@@ -97,12 +99,12 @@ function Project({ selectedProject }) {
       });
   };
 
-  const updateSimulation = (updatedSimulation, index) => {
+  const updateSimulation = (updatedSimulation, orderUpdate) => {
     setSimulationStatus(null);
     setError(false);
     setSimulationStatus(null);
-    const updatedSimulationRequest = simulation.map((s, i) => {
-      if (i === index) {
+    const updatedSimulationRequest = simulation.map((s) => {
+      if (s.order === orderUpdate) {
         return updatedSimulation;
       }
       return s;
@@ -112,6 +114,17 @@ function Project({ selectedProject }) {
 
   const checkSimulationFinish = () => {
     setCheckFinish(checkFinish + 1);
+  };
+
+  const refreshSimulation = () => {
+    setSimulationStatus(null);
+    setError(false);
+    setSimulationStatus(null);
+    setSimulation([]);
+    setOrder(1);
+    setIsSimulationRunning(false);
+    setDisableSimulation(false);
+    setCheckFinish(0);
   };
 
   useEffect(() => {
@@ -124,14 +137,27 @@ function Project({ selectedProject }) {
       <div className="flex flex-col h-screen justify-between">
         {selectedProject && (
           <>
-            <div className="p-4 sm:ml-64">
-              <h1 className="text-4xl font-semibold">{selectedProject.name}</h1>
+            <div className="p-4 sm:ml-64 flex items-center justify-between">
+              <div className="text-4xl font-semibold">
+                {selectedProject.name}
+              </div>
+              {!isSimulationRunning && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => refreshSimulation()}
+                    className="text-gray-900 flex gap-2 items-center bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-md px-5 py-2.5"
+                  >
+                    <ArrowPathIcon className="size-5" /> Refresh
+                  </button>
+                </div>
+              )}
             </div>
             <div className="px-4 pb-4 overflow-y-auto flex-grow sm:ml-64">
               {simulation.map((s, index) => {
                 return (
                   <Simulation
-                    key={index}
+                    key={s.order}
                     index={index}
                     selectedProject={selectedProject}
                     simulation={s}

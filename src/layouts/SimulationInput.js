@@ -7,6 +7,7 @@ function SimulationInput({
   options,
   name,
   onChange,
+  isSimulationRunning,
 }) {
   const defaultValue =
     name !== "finalStep" ? `Select ${title.toString().toLowerCase()}` : 0;
@@ -42,8 +43,7 @@ function SimulationInput({
         </label>
         {name !== "finalStep" ? (
           <select
-            disabled={disabled}
-            defaultValue={`Select ${title.toString().toLowerCase()}`}
+            disabled={disabled || isSimulationRunning}
             onChange={onChange}
             value={value}
             name={name}
@@ -68,6 +68,7 @@ function SimulationInput({
           <>
             <input
               type="number"
+              disabled={isSimulationRunning}
               name={name}
               value={value}
               className={
