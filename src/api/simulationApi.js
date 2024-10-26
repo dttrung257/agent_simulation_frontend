@@ -66,3 +66,7 @@ export const getImageResultFromRange = async (
     `/experiment_result_images?experiment_result_id=${resultId}&start_step=${startStep}&end_step=${finalStep}`
   );
 };
+
+export const getDownloadSimulationResultURL = async (resultId) => {
+  return await axiosInstance.get(`/experiment_results/${resultId}`);
+};

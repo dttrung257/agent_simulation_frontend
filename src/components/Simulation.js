@@ -1,10 +1,19 @@
 import SimulationInput from "../layouts/SimulationInput";
 import { useEffect, useRef, useState } from "react";
-import { getExperimentList, getResultStatus } from "../api/simulationApi";
+import {
+  getDownloadSimulationResultURL,
+  getExperimentList,
+  getResultStatus,
+} from "../api/simulationApi";
 import { Link } from "react-router-dom";
 import "ldrs/hourglass";
 import { ring2 } from "ldrs";
-import { XMarkIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowDownTrayIcon,
+  InformationCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
+import Alert from "../layouts/Alert";
 
 function Simulation({
   selectedProject,
@@ -20,7 +29,12 @@ function Simulation({
   const [currentSimulation, setCurrentSimulation] = useState(simulation);
   const [currentStep, setCurrentStep] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState(0);
+  const [downloadUrl, setDownloadUrl] = useState(null);
   const interval = useRef(null);
+  const waitForDownloadMessage =
+    "Preparing your download... Please wait a moment.";
+  const downloadReadyMessage = "Your results are ready for download!";
 
   ring2.register();
 
@@ -33,15 +47,18 @@ function Simulation({
   }, [currentSimulation.modelId]);
 
   useEffect(() => {
-    if (currentStep === currentSimulation.finalStep) {
-      checkSimulationFinish();
+    if (status === 5) {
       clearInterval(interval.current);
+      console.log(status, "stop progress");
+      getDownloadResultURL();
+      checkSimulationFinish();
       return;
     }
-    if (isSimulationRunning && currentStep === null) {
+    if (isSimulationRunning && status === 0 && currentStep === null) {
+      console.log("run check");
       checkSimulationStatus(simulation.resultId);
     }
-  }, [isSimulationRunning, currentStep]);
+  }, [isSimulationRunning, currentStep, status]);
 
   useEffect(() => {
     updateSimulation(currentSimulation, simulation.order);
@@ -59,6 +76,10 @@ function Simulation({
     interval.current = setInterval(async () => {
       await getResultStatus(resultId)
         .then((response) => {
+          setStatus(response.data.data.status);
+          if (response.data.data.currentStep === null) {
+            setCurrentStep(0);
+          }
           if (response.data.data.currentStep !== null) {
             setCurrentStep(response.data.data.currentStep);
           }
@@ -91,6 +112,16 @@ function Simulation({
       });
     } else {
     }
+  };
+
+  const getDownloadResultURL = async () => {
+    await getDownloadSimulationResultURL(simulation.resultId)
+      .then((response) => {
+        setDownloadUrl(response.data.data.downloadUrl);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   return (
@@ -159,11 +190,30 @@ function Simulation({
             </div>
           </div>
         )}
-
-        <div className="flex items-center justify-end">
-          <div className="place-items-center gap-4 grid grid-flow-col">
-            {currentStep === currentSimulation.finalStep && (
-              <>
+        {currentStep === currentSimulation.finalStep && (
+          <>
+            <div className="flex items-center mt-4 justify-between">
+              <div>
+                {status === 3 && (
+                  <Alert message={waitForDownloadMessage} type={"info"} />
+                )}
+                {status === 5 && downloadUrl !== null && (
+                  <Alert message={downloadReadyMessage} type={"success"} />
+                )}
+              </div>
+              <div className="place-items-center gap-4 grid grid-flow-col">
+                {downloadUrl !== null && (
+                  <a
+                    href={downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-purple-500 to-pink-500 group-hover:from-purple-500 group-hover:to-pink-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-purple-200"
+                  >
+                    <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                      <ArrowDownTrayIcon className="size-6" />
+                    </span>
+                  </a>
+                )}
                 <Link
                   to={{
                     pathname: `/result/${simulation.resultId}/view-steps`,
@@ -192,10 +242,16 @@ function Simulation({
                     </span>
                   </button>
                 </Link>
-              </>
-            )}
-          </div>
-        </div>
+              </div>
+            </div>
+            {/* <div>
+              <p className="items-center mt-2 justify-end text-sm flex gap-1 text-orange-600">
+                <InformationCircleIcon className="size-4" /> To view animation,
+                you must download result file.
+              </p>
+            </div> */}
+          </>
+        )}
       </div>
     </div>
   );

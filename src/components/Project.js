@@ -1,13 +1,11 @@
 import AddSimulation from "./AddSimulation";
 import Alert from "../layouts/Alert";
-import { Link } from "react-router-dom";
 import Simulation from "./Simulation";
 import { useEffect, useState } from "react";
 import {
   getModelOptionsList,
   getNodeList,
   runSimulation,
-  getResultStatus,
 } from "../api/simulationApi";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
 
