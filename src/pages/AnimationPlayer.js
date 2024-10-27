@@ -1,152 +1,299 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
-import {
-  getImageResultFromRange,
-  getCategoriesResult,
-} from "../api/simulationApi";
-import { PlayIcon, ArrowUturnLeftIcon } from "@heroicons/react/24/solid";
-import { quantum } from "ldrs";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { FolderIcon, PauseIcon, PlayIcon } from "@heroicons/react/24/solid";
+import { useState, useEffect, useCallback, useRef } from "react";
+// import { FolderOpen, Play, Pause, Settings } from "lucide-react";
 
-function AnimationPlayer() {
-  const { resultId } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const finalStep = parseInt(searchParams.get("finalStep"));
-  const [currentStep, setCurrentStep] = useState(-1);
-  const [endStep, setEndStep] = useState(0);
-  const [images, setImages] = useState([]);
-  const [play, setPlay] = useState(false);
-  const [simulationCategoryId, setSimulationCategoryId] = useState(-1);
-  const [loading, setLoading] = useState(true);
-  const interval = useRef();
-  const navigate = useNavigate();
+const AnimationPlayer = () => {
+  const [folderStreams, setFolderStreams] = useState([]); // Array of folder data
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [interval, setInterval] = useState(1000);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  quantum.register();
+  const intervalRef = useRef(1000);
+  const lastUpdateTime = useRef(0);
+  const animationFrameId = useRef(null);
 
-  useEffect(() => {
-    setEndStep(finalStep);
-    const getCategories = async () => {
-      await getCategoriesResult(resultId).then((response) => {
-        setSimulationCategoryId(
-          response.data.data.find((category) =>
-            category.name.startsWith("Simulator")
-          ).id
-        );
-      });
-    };
+  const handleRootDirectorySelect = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const rootHandle = await window.showDirectoryPicker();
+      const folderData = [];
 
-    if (simulationCategoryId < 0) {
-      getCategories();
-      setCurrentStep(0);
-    }
-  }, []);
+      // Get all subdirectories
+      for await (const entry of rootHandle.values()) {
+        if (entry.kind === "directory") {
+          const folderImages = [];
 
-  useEffect(() => {
-    getImages();
+          // Scan each subdirectory for images
+          async function scanDirectory(dirHandle, path = "") {
+            for await (const fileEntry of dirHandle.values()) {
+              if (fileEntry.kind === "file") {
+                const file = await fileEntry.getFile();
+                if (file.type.startsWith("image/")) {
+                  folderImages.push({
+                    handle: fileEntry,
+                    path: path + file.name,
+                    size: file.size,
+                  });
+                }
+              } else if (fileEntry.kind === "directory") {
+                await scanDirectory(fileEntry, `${path}${fileEntry.name}/`);
+              }
+            }
+          }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [simulationCategoryId]);
+          await scanDirectory(entry);
 
-  useEffect(() => {
-    if (images.length == finalStep) {
-      setLoading(false);
-    }
-  }, [images.length]);
+          if (folderImages.length > 0) {
+            // Sort images by name
+            folderImages.sort((a, b) => a.path.localeCompare(b.path));
 
-  useEffect(() => {
-    if (play && currentStep === 0) {
-      const showImages = () => {
-        interval.current = setInterval(() => {
-          setCurrentStep((currentStep) => currentStep + 1);
-        }, 1000);
-      };
-      if (!loading) {
-        if (currentStep >= 0) {
-          showImages();
+            // Create initial URL for first image
+            const firstImageUrl = await loadImage(folderImages[0].handle);
+
+            folderData.push({
+              name: entry.name,
+              images: folderImages,
+              currentUrl: firstImageUrl,
+              nextUrl: null,
+            });
+          }
         }
       }
-    }
 
-    if (currentStep + 1 === finalStep && interval.current) {
-      clearInterval(interval.current);
-    }
-  }, [play, currentStep]);
+      setFolderStreams(folderData);
+      setCurrentIndex(0);
+      setIsPlaying(false);
 
-  const getImages = async () => {
-    await getImageResultFromRange(resultId, currentStep, endStep).then(
-      (response) => {
-        response.data.data.steps.forEach((step, id) => {
-          step.categories.forEach((category, id) => {
-            if (category.categoryId === simulationCategoryId) {
-              setImages((images) => [...images, category.encodedImage]);
-            }
-          });
-        });
+      // Preload next images
+      if (folderData.length > 0) {
+        await preloadNextImages(folderData, 0);
       }
-    );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const playSimulation = (imagePlayer) => {
-    setPlay(true);
+  const loadImage = async (handle) => {
+    try {
+      const file = await handle.getFile();
+      return URL.createObjectURL(file);
+    } catch (err) {
+      console.error("Error loading image:", err);
+      return null;
+    }
   };
+
+  const advanceImages = useCallback(async () => {
+    if (folderStreams.length === 0) return;
+
+    const updatedStreams = folderStreams.map((folder) => {
+      if (folder.currentUrl) {
+        URL.revokeObjectURL(folder.currentUrl);
+      }
+
+      return {
+        ...folder,
+        currentUrl: folder.nextUrl,
+        nextUrl: null,
+      };
+    });
+
+    setFolderStreams(updatedStreams);
+    setCurrentIndex((prev) => prev + 1);
+    await preloadNextImages(updatedStreams, currentIndex);
+  }, [folderStreams, currentIndex]);
+
+  const updateFrame = useCallback(
+    (timestamp) => {
+      if (!lastUpdateTime.current) {
+        lastUpdateTime.current = timestamp;
+      }
+
+      const elapsed = timestamp - lastUpdateTime.current;
+
+      if (elapsed >= intervalRef.current) {
+        // Check if we're at the last image
+        if (currentIndex >= folderStreams[0].images.length - 1) {
+          setIsPlaying(false);
+          cancelAnimationFrame(animationFrameId.current);
+          return;
+        }
+        advanceImages();
+        lastUpdateTime.current = timestamp;
+      }
+
+      if (isPlaying) {
+        animationFrameId.current = requestAnimationFrame(updateFrame);
+      }
+    },
+    [isPlaying, advanceImages, currentIndex, folderStreams]
+  );
+
+  const resetPresentation = useCallback(() => {
+    setCurrentIndex(0);
+    // Reset all streams to their first image
+    const resetStreams = async () => {
+      const updatedStreams = await Promise.all(
+        folderStreams.map(async (folder) => {
+          // Cleanup existing URLs
+          if (folder.currentUrl) URL.revokeObjectURL(folder.currentUrl);
+          if (folder.nextUrl) URL.revokeObjectURL(folder.nextUrl);
+
+          // Load first image
+          const firstImageUrl = await loadImage(folder.images[0].handle);
+          return {
+            ...folder,
+            currentUrl: firstImageUrl,
+            nextUrl: null,
+          };
+        })
+      );
+      setFolderStreams(updatedStreams);
+      await preloadNextImages(updatedStreams, 0);
+    };
+    resetStreams();
+  }, [folderStreams]);
+
+  const preloadNextImages = async (streams, currentIdx) => {
+    const nextIdx = currentIdx + 1;
+
+    if (nextIdx < streams[0].images.length) {
+      for (let i = 0; i < streams.length; i++) {
+        if (streams[i].images[nextIdx]) {
+          const nextUrl = await loadImage(streams[i].images[nextIdx].handle);
+          streams[i].nextUrl = nextUrl;
+        }
+      }
+      setFolderStreams([...streams]);
+    }
+  };
+
+  useEffect(() => {
+    intervalRef.current = interval;
+  }, [interval]);
+
+  useEffect(() => {
+    if (isPlaying) {
+      lastUpdateTime.current = 0;
+      animationFrameId.current = requestAnimationFrame(updateFrame);
+    } else {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    }
+
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, [isPlaying, updateFrame]);
+
+  useEffect(() => {
+    return () => {
+      folderStreams.forEach((folder) => {
+        if (folder.currentUrl) URL.revokeObjectURL(folder.currentUrl);
+        if (folder.nextUrl) URL.revokeObjectURL(folder.nextUrl);
+      });
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+    };
+  }, []);
 
   return (
-    <>
-      {loading ? (
-        <div className="h-screen w-screen place-content-center">
-          <div className="flex justify-center">
-            <l-quantum size="250" speed="1.75" color="#3b82f6"></l-quantum>
-          </div>
-        </div>
-      ) : (
-        <div className="h-screen w-screen justify-items-center place-content-center">
-          {!play && (
-            <div className="justify-center mb-12">
-              <button
-                className="flex mx-auto items-center justify-center p-0.5 overflow-hidden text-lg font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white focus:ring-4 focus:outline-none focus:ring-green-200"
-                onClick={() => playSimulation(images)}
-              >
-                <span className="flex px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                  <PlayIcon className="size-6 mr-2" />
-                  <div>Play simulation</div>
-                </span>
-              </button>
-              <button
-                type="button"
-                className="mx-auto my-4 flex gap-2 text-gray-900 bg-white focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
-                onClick={() => navigate("/")}
-              >
-                <ArrowUturnLeftIcon className="size-5" />
-                Back to home
-              </button>
-            </div>
-          )}
-          {play && (
-            <div>
-              <div className="mx-auto w-fit text-4xl mb-4 font-medium">
-                Step: {currentStep}
-              </div>
-              <button
-                type="button"
-                className="mx-auto my-4 flex gap-2 text-gray-900 bg-white focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
-                onClick={() => navigate("/")}
-              >
-                <ArrowUturnLeftIcon className="size-5" />
-                Back to home
-              </button>
+    <div className="p-4">
+      <div className="mb-4 flex gap-4 items-center flex-wrap">
+        <button
+          onClick={handleRootDirectorySelect}
+          disabled={loading}
+          className="text-white gap-2 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
+        >
+          <FolderIcon className="size-5" />
+          Select Root Directory
+        </button>
 
-              <div className="mx-auto bg-white border w-fit p-5 border-gray-300 rounded-lg shadow-2xl">
-                <img
-                  alt="simulator"
-                  src={`data:image/jpeg;base64,${images[currentStep]}`}
-                />
-              </div>
+        {folderStreams.length > 0 && (
+          <>
+            <button
+              onClick={() => {
+                // If we're at the end, reset before playing
+                if (currentIndex >= folderStreams[0].images.length - 1) {
+                  resetPresentation();
+                }
+                setIsPlaying(!isPlaying);
+              }}
+              className="flex items-center gap-2 py-2.5 px-5 text-md font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100"
+            >
+              {isPlaying ? (
+                <PauseIcon className="size-4" />
+              ) : (
+                <PlayIcon className="size-4" />
+              )}
+              {isPlaying ? "Pause" : "Play"}
+            </button>
+
+            <div className="flex-row items-center">
+              {/* <Settings className="w-4 h-4 text-gray-500" /> */}
+              <label className="block text-sm font-medium text-gray-900">
+                Playback speed
+              </label>
+
+              <input
+                type="range"
+                min="100"
+                max="5000"
+                step="100"
+                value={interval}
+                onChange={(e) => setInterval(Number(e.target.value))}
+                className="w-32 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <span className="text-sm ml-2 text-gray-600">{interval}ms</span>
             </div>
-          )}
+          </>
+        )}
+      </div>
+
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+
+      {loading && <div className="text-gray-600">Loading folders...</div>}
+
+      {folderStreams[0] && (
+        <div className="text-4xl mb-4 font-md text-center">
+          Step {currentIndex + 1} of {folderStreams[0].images.length}
         </div>
       )}
-    </>
+      {folderStreams.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-6 items-center place-content-center mx-4 my-12">
+            {folderStreams.map((folder) => (
+              <div key={folder.name} className="border rounded-lg p-4">
+                <div className="font-medium mb-2">{folder.name}</div>
+                <div className="bg-white border w-fit p-5 border-gray-300 rounded-lg shadow-x">
+                  {folder.currentUrl ? (
+                    <img
+                      src={folder.currentUrl}
+                      alt={`${folder.name} - ${currentIndex + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      Loading...
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
-}
+};
 
 export default AnimationPlayer;

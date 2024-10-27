@@ -194,7 +194,7 @@ function Simulation({
           <>
             <div className="flex items-center mt-4 justify-between">
               <div>
-                {status === 3 && (
+                {status !== 5 && downloadUrl === null && (
                   <Alert message={waitForDownloadMessage} type={"info"} />
                 )}
                 {status === 5 && downloadUrl !== null && (
@@ -216,8 +216,7 @@ function Simulation({
                 )}
                 <Link
                   to={{
-                    pathname: `/result/${simulation.resultId}/view-steps`,
-                    search: `?finalStep=${simulation.finalStep}`,
+                    pathname: `/result/view-steps`,
                   }}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -228,28 +227,14 @@ function Simulation({
                     </span>
                   </button>
                 </Link>
-                <Link
-                  to={{
-                    pathname: `/result/${simulation.resultId}/play-animation`,
-                    search: `?finalStep=${simulation.finalStep}`,
-                  }}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
-                    <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                      Play simulation
-                    </span>
-                  </button>
-                </Link>
               </div>
             </div>
-            {/* <div>
-              <p className="items-center mt-2 justify-end text-sm flex gap-1 text-orange-600">
+            <div>
+              <p className="items-center mt-2 justify-end text-sm flex gap-1 text-orange-700">
                 <InformationCircleIcon className="size-4" /> To view animation,
                 you must download result file.
               </p>
-            </div> */}
+            </div>
           </>
         )}
       </div>

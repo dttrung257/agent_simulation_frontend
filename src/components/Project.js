@@ -8,6 +8,7 @@ import {
   runSimulation,
 } from "../api/simulationApi";
 import { ArrowPathIcon } from "@heroicons/react/24/solid";
+import { Link } from "react-router-dom";
 
 function Project({ selectedProject }) {
   const [nodeList, setNodeList] = useState([]);
@@ -174,28 +175,39 @@ function Project({ selectedProject }) {
             </div>
           </>
         )}
-        {(!isSimulationRunning || checkFinish !== simulation.length) && (
-          <div className="p-4 w-screen border">
-            <footer className="static block p-4 sm:ml-64 bottom-0 text-black border-t border border-gray-200 rounded-lg shadow">
-              <div className="flex justify-between items-center">
-                <div>
-                  {!isSimulationRunning && simulationStatus === null && (
-                    <span>
-                      {simulation.length > 0 && (
-                        <span className="bg-indigo-100 text-indigo-800 text-xl font-medium px-2.5 py-0.5 rounded">
-                          {simulation.length}{" "}
-                          {simulation.length > 1 ? "simulations" : "simulation"}
-                        </span>
-                      )}
+
+        <div className="p-4 w-screen border">
+          <footer className="static block p-4 sm:ml-64 bottom-0 text-black border-t border border-gray-200 rounded-lg shadow">
+            <div className="flex justify-between items-center">
+              <div>
+                {!error && (
+                  <span>
+                    {simulation.length > 0 && (
+                      <span className="bg-indigo-100 text-indigo-800 text-xl font-medium px-2.5 py-0.5 rounded">
+                        {simulation.length}{" "}
+                        {simulation.length > 1 ? "simulations" : "simulation"}
+                      </span>
+                    )}
+                  </span>
+                )}
+                {error && <Alert type="error" message={simulationStatus} />}
+              </div>
+              {isSimulationRunning && checkFinish === simulation.length && (
+                <Link
+                  to={{
+                    pathname: `/result/play-animation`,
+                  }}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
+                    <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                      Play simulation
                     </span>
-                  )}
-
-                  {isSimulationRunning && !error && (
-                    <Alert type="success" message={simulationStatus} />
-                  )}
-
-                  {error && <Alert type="error" message={simulationStatus} />}
-                </div>
+                  </button>
+                </Link>
+              )}
+              {(!isSimulationRunning || checkFinish !== simulation.length) && (
                 <button
                   className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
                   disabled={simulation.length === 0 || disableSimulation}
@@ -214,10 +226,10 @@ function Project({ selectedProject }) {
                     ? "Run Simulation"
                     : "Running Simulation..."}
                 </button>
-              </div>
-            </footer>
-          </div>
-        )}
+              )}
+            </div>
+          </footer>
+        </div>
       </div>
     </>
   );
