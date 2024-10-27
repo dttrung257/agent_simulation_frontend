@@ -7,7 +7,7 @@ import {
   getNodeList,
   runSimulation,
 } from "../api/simulationApi";
-import { ArrowPathIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
 function Project({ selectedProject }) {

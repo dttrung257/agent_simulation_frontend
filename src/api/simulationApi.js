@@ -30,6 +30,10 @@ export const runSimulation = async (simulationRequests) => {
   });
 };
 
+export const stopSimulation = async (resultId) => {
+  return await axiosInstance.delete(`/experiment_results/${resultId}/stop`);
+};
+
 export const getResultStatus = async (resultId) => {
   return await axiosInstance.get(`/experiment_results/${resultId}/progress`);
 };

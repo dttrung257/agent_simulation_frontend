@@ -34,7 +34,7 @@ function SimulationInput({
 
   return (
     <div className="w-full p-6 bg-white border border-gray-200 rounded-lg shadow">
-      <h2 className="mb-4 text-2xl font-semibold tracking-tight text-gray-900">
+      <h2 className="mb-4 truncate text-2xl font-semibold tracking-tight text-gray-900">
         {title}
       </h2>
       <form className="w-full mb-4 mx-auto">

@@ -1,6 +1,5 @@
 import { FolderIcon, PauseIcon, PlayIcon } from "@heroicons/react/24/solid";
 import { useState, useEffect, useCallback, useRef } from "react";
-// import { FolderOpen, Play, Pause, Settings } from "lucide-react";
 
 const AnimationPlayer = () => {
   const [folderStreams, setFolderStreams] = useState([]); // Array of folder data
@@ -265,7 +264,7 @@ const AnimationPlayer = () => {
 
       {folderStreams[0] && (
         <div className="text-4xl mb-4 font-md text-center">
-          Step {currentIndex + 1} of {folderStreams[0].images.length}
+          Step {currentIndex} of {folderStreams[0].images.length - 1}
         </div>
       )}
       {folderStreams.length > 0 && (

@@ -4,6 +4,7 @@ import {
   getDownloadSimulationResultURL,
   getExperimentList,
   getResultStatus,
+  stopSimulation,
 } from "../api/simulationApi";
 import { Link } from "react-router-dom";
 import "ldrs/hourglass";
@@ -28,6 +29,7 @@ function Simulation({
   const [experimentOptions, setExperimentOptions] = useState([]);
   const [currentSimulation, setCurrentSimulation] = useState(simulation);
   const [currentStep, setCurrentStep] = useState(null);
+  const [finalStep, setFinalStep] = useState(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState(null);
@@ -35,6 +37,7 @@ function Simulation({
   const waitForDownloadMessage =
     "Preparing your download... Please wait a moment.";
   const downloadReadyMessage = "Your results are ready for download!";
+  const [isSimulationStopped, setIsSimulationStopped] = useState(false);
 
   ring2.register();
 
@@ -49,13 +52,11 @@ function Simulation({
   useEffect(() => {
     if (status === 5) {
       clearInterval(interval.current);
-      console.log(status, "stop progress");
       getDownloadResultURL();
       checkSimulationFinish();
       return;
     }
     if (isSimulationRunning && status === 0 && currentStep === null) {
-      console.log("run check");
       checkSimulationStatus(simulation.resultId);
     }
   }, [isSimulationRunning, currentStep, status]);
@@ -76,6 +77,8 @@ function Simulation({
     interval.current = setInterval(async () => {
       await getResultStatus(resultId)
         .then((response) => {
+          setFinalStep(response.data.data.currentStep);
+
           setStatus(response.data.data.status);
           if (response.data.data.currentStep === null) {
             setCurrentStep(0);
@@ -84,7 +87,7 @@ function Simulation({
             setCurrentStep(response.data.data.currentStep);
           }
           setProgress(
-            (response.data.data.currentStep / currentSimulation.finalStep) * 100
+            (response.data.data.currentStep / simulation.finalStep) * 100
           );
         })
         .catch((error) => {
@@ -124,22 +127,44 @@ function Simulation({
       });
   };
 
+  const stopSimulationOnClick = async (e) => {
+    await stopSimulation(simulation.resultId)
+      .then(() => {
+        setIsSimulationStopped(true);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
   return (
     <div key={simulation.order}>
       <div className="block p-6 mb-4 bg-white border border-gray-200 rounded-lg shadow">
-        {!isSimulationRunning && (
-          <div className="flex justify-end mb-2 items-center">
+        <div className="flex justify-end mb-4 items-center">
+          {currentStep > 0 &&
+            currentStep < simulation.finalStep &&
+            isSimulationRunning &&
+            status === 2 && (
+              <button
+                disabled={isSimulationStopped}
+                onClick={() => stopSimulationOnClick()}
+                className="focus:outline-none disabled:cursor-not-allowed disabled:bg-red-300 items-center flex gap-2 text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-md px-5 py-2.5"
+              >
+                <XMarkIcon className="size-5" />
+                Stop simulation
+              </button>
+            )}
+          {!isSimulationRunning && (
             <button
               onClick={removeSimulation}
-              value={simulation.order}
               className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
             >
               <div>
                 <XMarkIcon value={simulation.order} className="size-6" />
               </div>
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         <div className="grid grid-cols-4 gap-4">
           <SimulationInput
@@ -190,7 +215,7 @@ function Simulation({
             </div>
           </div>
         )}
-        {currentStep === currentSimulation.finalStep && (
+        {(status === 3 || status === 5) && (
           <>
             <div className="flex items-center mt-4 justify-between">
               <div>
@@ -216,7 +241,8 @@ function Simulation({
                 )}
                 <Link
                   to={{
-                    pathname: `/result/view-steps`,
+                    pathname: `/result/${simulation.resultId}/view-steps`,
+                    search: `?finalStep=${finalStep}`,
                   }}
                   target="_blank"
                   rel="noopener noreferrer"
