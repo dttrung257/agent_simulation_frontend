@@ -34,9 +34,12 @@ function Simulation({
   const [status, setStatus] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState(null);
   const interval = useRef(null);
-  const waitForDownloadMessage =
-    "Preparing your download... Please wait a moment.";
-  const downloadReadyMessage = "Your results are ready for download!";
+  const PREPARE_DATA_FOR_DOWNLOAD_MESSAGE =
+    "Preparing your data... Please wait a moment.";
+  const READY_FOR_DOWNLOAD_MESSAGE = "Your results are ready for download!";
+  const STARTING_GAMA_HEADLESS_MESSAGE = "Starting GAMA headless...";
+  const SIMULATION_IS_RUNNING_MESSAGE = "Simulation is running...";
+  const SAVING_RESULT_MESSAGE = "Saving result...";
   const [isSimulationStopped, setIsSimulationStopped] = useState(false);
 
   ring2.register();
@@ -74,26 +77,27 @@ function Simulation({
   };
 
   const checkSimulationStatus = (resultId) => {
-    interval.current = setInterval(async () => {
-      await getResultStatus(resultId)
-        .then((response) => {
-          setFinalStep(response.data.data.currentStep);
-
-          setStatus(response.data.data.status);
-          if (response.data.data.currentStep === null) {
-            setCurrentStep(0);
-          }
-          if (response.data.data.currentStep !== null) {
-            setCurrentStep(response.data.data.currentStep);
-          }
-          setProgress(
-            (response.data.data.currentStep / simulation.finalStep) * 100
-          );
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    }, 2000);
+    const updateStatus = async () => {
+      try {
+        const response = await getResultStatus(resultId);
+        const data = response.data.data;
+  
+        setFinalStep(data.currentStep);
+        setStatus(data.status);
+  
+        setCurrentStep(data.currentStep ?? 0);
+        setProgress((data.currentStep / simulation.finalStep) * 100);
+  
+        if ((data.status === 2 && data.currentStep === finalStep) || data.status === 3) {
+          clearInterval(interval.current);
+          interval.current = setInterval(updateStatus, 500);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+  
+    interval.current = setInterval(updateStatus, 1500);
   };
 
   const handleChange = (e) => {
@@ -215,15 +219,26 @@ function Simulation({
             </div>
           </div>
         )}
+        {(status === 2) && (
+          <>
+            <div className="flex items-center mt-4 justify-between">
+              <div>
+                {currentStep === 0 && (<Alert message={STARTING_GAMA_HEADLESS_MESSAGE} type={"info"} />)}
+                {currentStep > 0 && currentStep < simulation.finalStep && (<Alert message={SIMULATION_IS_RUNNING_MESSAGE} type={"info"} />)}
+                {currentStep === simulation.finalStep && (<Alert message={SAVING_RESULT_MESSAGE} type={"info"} />)}
+              </div>
+            </div>
+          </>
+        )}
         {(status === 3 || status === 5) && (
           <>
             <div className="flex items-center mt-4 justify-between">
               <div>
                 {status !== 5 && downloadUrl === null && (
-                  <Alert message={waitForDownloadMessage} type={"info"} />
+                  <Alert message={PREPARE_DATA_FOR_DOWNLOAD_MESSAGE} type={"info"} />
                 )}
                 {status === 5 && downloadUrl !== null && (
-                  <Alert message={downloadReadyMessage} type={"success"} />
+                  <Alert message={READY_FOR_DOWNLOAD_MESSAGE} type={"success"} />
                 )}
               </div>
               <div className="place-items-center gap-4 grid grid-flow-col">
@@ -249,18 +264,18 @@ function Simulation({
                 >
                   <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-cyan-500 to-blue-500 group-hover:from-cyan-500 group-hover:to-blue-500 hover:text-white focus:ring-4 focus:outline-none focus:ring-cyan-200">
                     <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                      View step-by-step
+                      View Result
                     </span>
                   </button>
                 </Link>
               </div>
             </div>
-            <div>
+            {/* <div>
               <p className="items-center mt-2 justify-end text-sm flex gap-1 text-orange-700">
                 <InformationCircleIcon className="size-4" /> To view animation,
                 you must download result file.
               </p>
-            </div>
+            </div> */}
           </>
         )}
       </div>

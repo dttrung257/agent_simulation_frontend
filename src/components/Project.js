@@ -98,6 +98,10 @@ function Project({ selectedProject }) {
       });
   };
 
+  const newRun = () => {
+    window.location.reload();
+  };
+
   const updateSimulation = (updatedSimulation, orderUpdate) => {
     setSimulationStatus(null);
     setError(false);
@@ -193,19 +197,12 @@ function Project({ selectedProject }) {
                 {error && <Alert type="error" message={simulationStatus} />}
               </div>
               {isSimulationRunning && checkFinish === simulation.length && (
-                <Link
-                  to={{
-                    pathname: `/result/play-animation`,
-                  }}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  className="text-white gap-4 flex disabled:bg-blue-400 disabled:cursor-not-allowed items-center hover:cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-md px-5 py-2.5"
+                  onClick={() => newRun()}
                 >
-                  <button className="flex hover:cursor-pointer items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white focus:ring-4 focus:outline-none focus:ring-pink-200">
-                    <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                      Play simulation
-                    </span>
-                  </button>
-                </Link>
+                  New Run
+                </button>
               )}
               {(!isSimulationRunning || checkFinish !== simulation.length) && (
                 <button
