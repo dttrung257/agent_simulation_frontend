@@ -72,6 +72,7 @@ function Project({ selectedProject }) {
     });
 
     setDisableSimulation(true);
+
     await runSimulation(simulationRequests)
       .then((response) => {
         setSimulationStatus("Success! Simulation is running.");
@@ -134,6 +135,14 @@ function Project({ selectedProject }) {
     getModelOptions();
     getNode();
   }, []);
+
+  useEffect(() => {
+    if (selectedProject?.id) {
+      refreshSimulation();
+      getModelOptions();
+      getNode();
+    }
+  }, [selectedProject?.id]);
 
   return (
     <>

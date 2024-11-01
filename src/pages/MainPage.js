@@ -1,6 +1,6 @@
 import Sidebar from "../layouts/Sidebar";
 import { useEffect, useState } from "react";
-import { getProjectList, getModelList } from "../api/simulationApi";
+import { getProjectList, getModelListByProjectId } from "../api/simulationApi";
 import Project from "../components/Project";
 
 function MainPage() {
@@ -19,17 +19,20 @@ function MainPage() {
   };
 
   const onSelectedProject = (e) => {
+    setModelList([]);
     setSelectedProject(projectList[e.target.id]);
   };
 
   const getModel = async () => {
-    const modelArray = [];
-    await getModelList().then((response) => {
-      response.data.data.forEach((model) => {
-        modelArray.push({ id: model.id, name: model.name });
+    if (selectedProject.id) {
+      const modelArray = [];
+      await getModelListByProjectId(selectedProject.id).then((response) => {
+        response.data.data.forEach((model) => {
+          modelArray.push({ id: model.id, name: model.name });
+        });
       });
-    });
-    setModelList(modelArray);
+      setModelList(modelArray);
+    }
   };
 
   useEffect(() => {

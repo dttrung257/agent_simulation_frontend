@@ -33,6 +33,7 @@ function Simulation({
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState(0);
   const [downloadUrl, setDownloadUrl] = useState(null);
+  const [hasError, setHasError] = useState(false);
   const interval = useRef(null);
   const PREPARE_DATA_FOR_DOWNLOAD_MESSAGE =
     "Preparing your data... Please wait a moment.";
@@ -40,6 +41,7 @@ function Simulation({
   const STARTING_GAMA_HEADLESS_MESSAGE = "Starting GAMA headless...";
   const SIMULATION_IS_RUNNING_MESSAGE = "Simulation is running...";
   const SAVING_RESULT_MESSAGE = "Saving result...";
+  const RUN_FAIL = "Simulation failed to run. Please try again.";
   const [isSimulationStopped, setIsSimulationStopped] = useState(false);
 
   ring2.register();
@@ -58,15 +60,25 @@ function Simulation({
       getDownloadResultURL();
       checkSimulationFinish();
       return;
+    } else if (hasError) {
+      clearInterval(interval.current);
+      checkSimulationFinish();
+      return;
     }
-    if (isSimulationRunning && status === 0 && currentStep === null) {
+    if (isSimulationRunning && status === 0 && currentStep === null && simulation.resultId) {
       checkSimulationStatus(simulation.resultId);
     }
-  }, [isSimulationRunning, currentStep, status]);
+  }, [isSimulationRunning, currentStep, status, hasError]);
 
   useEffect(() => {
     updateSimulation(currentSimulation, simulation.order);
   }, [currentSimulation]);
+
+  useEffect(() => {
+    if (isSimulationRunning && !simulation.resultId) {
+      setHasError(true);
+    }
+  }, [isSimulationRunning, simulation.resultId]);
 
   const getExperiments = () => {
     getExperimentList(selectedProject.id, currentSimulation.modelId).then(
@@ -205,7 +217,7 @@ function Simulation({
             isSimulationRunning={isSimulationRunning}
           />
         </div>
-        {currentStep !== null && (
+        {currentStep !== null && !hasError && (
           <div className="w-full">
             <div className="text-right font-medium text-lg mb-2 mt-4">
               {currentStep}/{simulation.finalStep}{" "}
@@ -219,7 +231,10 @@ function Simulation({
             </div>
           </div>
         )}
-        {(status === 2) && (
+        {hasError && (
+          <Alert message={RUN_FAIL} type={"error"} />
+        )}
+        {(status === 2) && !hasError && (
           <>
             <div className="flex items-center mt-4 justify-between">
               <div>
@@ -230,7 +245,7 @@ function Simulation({
             </div>
           </>
         )}
-        {(status === 3 || status === 5) && (
+        {(status === 3 || status === 5) && !hasError && (
           <>
             <div className="flex items-center mt-4 justify-between">
               <div>

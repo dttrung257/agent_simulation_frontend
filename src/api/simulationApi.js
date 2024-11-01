@@ -18,6 +18,10 @@ export const getModelList = async () => {
   return await axiosInstance.get(`/models`);
 };
 
+export const getModelListByProjectId = async (projectId) => {
+  return await axiosInstance.get(`/models?project_id=${projectId}`);
+};
+
 export const getExperimentList = async (projectId, modelId) => {
   return await axiosInstance.get(
     `/experiments?model_id=${modelId}&project_id=${projectId}`
