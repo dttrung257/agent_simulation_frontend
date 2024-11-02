@@ -21,8 +21,11 @@ function Sidebar({
   };
 
   const handleProjectClick = (e) => {
-    onSelectedProject(e);
     const projectId = projectList[e.target.id].id;
+
+    if (selectedProject.id !== projectId) {
+      onSelectedProject(e);
+    }
 
     if (selectedProject.id === projectId) {
       setExpandedProject(expandedProject === projectId ? null : projectId);
@@ -32,7 +35,7 @@ function Sidebar({
   };
 
   const formatModelName = (name) => {
-    return name.endsWith('.gaml') ? name : `${name}.gaml`;
+    return name.endsWith(".gaml") ? name : `${name}.gaml`;
   };
 
   return (
@@ -61,10 +64,10 @@ function Sidebar({
               <div key={project.id}>
                 <li
                   className={`flex cursor-pointer items-center p-2 gap-4 text-gray-900 rounded-lg ${
-                    isSelected ? 'bg-blue-100' : 'bg-gray-200 hover:bg-gray-300'
+                    isSelected ? "bg-blue-100" : "bg-gray-200 hover:bg-gray-300"
                   }`}
                 >
-                  <div 
+                  <div
                     className="flex-1 flex items-center gap-4"
                     onClick={handleProjectClick}
                     id={index}
@@ -73,11 +76,11 @@ function Sidebar({
                     <FolderIcon className="flex-shrink-0 size-5 text-gray-500" />
                     {project.name}
                   </div>
-                  
+
                   {isSelected && (
                     <ChevronDownIcon
                       className={`size-5 text-gray-500 cursor-pointer transition-transform duration-200 ${
-                        isExpanded ? 'rotate-180' : ''
+                        isExpanded ? "rotate-180" : ""
                       }`}
                       onClick={(e) => toggleModels(project.id, e)}
                     />

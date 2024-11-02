@@ -38,9 +38,9 @@ function SimulationInput({
         {title}
       </h2>
       <form className="w-full mb-4 mx-auto">
-        <label className="block truncate mb-2 text-sm font-medium text-gray-900">
+        {/* <label className="block truncate mb-2 text-sm font-medium text-gray-900">
           Choose {title.toString().toLowerCase()}
-        </label>
+        </label> */}
         {name !== "finalStep" ? (
           <select
             disabled={disabled || isSimulationRunning}
@@ -86,7 +86,7 @@ function SimulationInput({
             {(value < 1 || value > 100000) && (
               <p className="mt-2 text-sm text-red-600 dark:text-red-500">
                 Please enter number between{" "}
-                <span className="font-medium">1-100,000</span>
+                <span className="font-medium">1 and 100,000</span>
               </p>
             )}
           </>

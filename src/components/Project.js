@@ -160,7 +160,7 @@ function Project({ selectedProject }) {
                     onClick={() => refreshSimulation()}
                     className="text-gray-900 flex gap-2 items-center bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-md px-5 py-2.5"
                   >
-                    <ArrowPathIcon className="size-5" /> Refresh
+                    <ArrowPathIcon className="size-5" /> Reset
                   </button>
                 </div>
               )}
@@ -187,6 +187,26 @@ function Project({ selectedProject }) {
               )}
             </div>
           </>
+        )}
+
+        {isSimulationRunning && checkFinish === simulation.length && (
+          <div className="flex justify-end mb-4 mr-8">
+            <Link
+              to={`/result/${simulation
+                .filter((s) => s.resultId)
+                .map((s) => s.resultId)
+                .filter((id) => id.toString().trim() !== "")
+                .join(",")}/view-results`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white focus:ring-4 focus:ring-green-200">
+                <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                  View All Results
+                </span>
+              </button>
+            </Link>
+          </div>
         )}
 
         <div className="p-4 w-screen border">

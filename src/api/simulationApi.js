@@ -78,3 +78,7 @@ export const getImageResultFromRange = async (
 export const getDownloadSimulationResultURL = async (resultId) => {
   return await axiosInstance.get(`/experiment_results/${resultId}`);
 };
+
+export const getExperimentResultDetail = async (resultId) => {
+  return await axiosInstance.get(`/experiment_results/${resultId}`);
+};
