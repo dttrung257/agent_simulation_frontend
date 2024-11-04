@@ -20,6 +20,7 @@ import { quantum } from "ldrs";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 function ResultViewer() {
+  const FRAME_RATE = 45;
   const { resultId } = useParams();
   const [searchParams] = useSearchParams();
   const finalStep = parseInt(searchParams.get("finalStep"));
@@ -37,8 +38,8 @@ function ResultViewer() {
   quantum.register();
 
   const formatRealTime = (step) => {
-    // 1 step = 45 seconds
-    const totalSeconds = step * 45;
+    // 1 step = 60 seconds
+    const totalSeconds = step * 60;
 
     const days = Math.floor(totalSeconds / (24 * 3600));
     const remainingSeconds = totalSeconds % (24 * 3600);
@@ -196,14 +197,14 @@ function ResultViewer() {
       {/* <h1 className="text-center text-7xl font-semibold mt-24 mb-6">
         Step Viewer
       </h1> */}
-      <button
+      {/* <button
         type="button"
         className="fixed top-8 left-8 flex gap-2 text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 transition-colors"
         onClick={() => navigate("/")}
       >
         <ArrowUturnLeftIcon className="size-5" />
         Back to home
-      </button>
+      </button> */}
 
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-center text-4xl font-semibold mt-12">
@@ -220,16 +221,16 @@ function ResultViewer() {
           <span className="text-sm font-medium text-gray-900">Speed</span>
           <input
             type="range"
-            min="10"
-            max="5001"
+            min="1"
+            max="1501"
             step="10"
             value={speed}
             onChange={handleSpeedChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          <span className="text-sm font-medium text-gray-900">
+          {/* <span className="text-sm font-medium text-gray-900">
             {Math.round((speed / 1000) * 100) / 100}s
-          </span>
+          </span> */}
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-600 mt-1">
@@ -251,8 +252,9 @@ function ResultViewer() {
         <button
           type="button"
           onClick={() => {
-            if (currentStep > 0) {
-              setCurrentStep(currentStep - 1);
+            if (currentStep >= FRAME_RATE) {
+              setCurrentStep(currentStep - FRAME_RATE);
+              setInputStep(currentStep - FRAME_RATE);
             }
           }}
           disabled={isPlaying}
@@ -276,8 +278,9 @@ function ResultViewer() {
         <button
           type="button"
           onClick={() => {
-            if (currentStep < parseInt(finalStep) - 1) {
-              setCurrentStep(currentStep + 1);
+            if (currentStep + FRAME_RATE < parseInt(finalStep)) {
+              setCurrentStep(currentStep + FRAME_RATE);
+              setInputStep(currentStep + FRAME_RATE);
             }
           }}
           disabled={isPlaying}

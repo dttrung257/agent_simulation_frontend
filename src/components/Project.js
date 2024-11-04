@@ -7,7 +7,7 @@ import {
   getNodeList,
   runSimulation,
 } from "../api/simulationApi";
-import { ArrowPathIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
 function Project({ selectedProject }) {
@@ -51,11 +51,9 @@ function Project({ selectedProject }) {
     setOrder(order + 1);
   };
 
-  const removeSimulation = (e) => {
-    const orderRemove = parseInt(e.currentTarget.value);
+  const removeSimulation = (orderToRemove) => {
     setSimulationStatus(null);
-    console.log(simulation.filter((s) => s.order !== orderRemove));
-    setSimulation(simulation.filter((s) => s.order !== orderRemove));
+    setSimulation(simulation.filter((s) => s.order !== orderToRemove));
   };
 
   const runSimulationEvent = async () => {
@@ -66,7 +64,11 @@ function Project({ selectedProject }) {
         nodeId: s.nodeId,
         projectId: selectedProject.id,
         experiments: [
-          { id: s.experimentId, modelId: s.modelId, finalStep: s.finalStep },
+          {
+            id: s.experimentId,
+            modelId: s.modelId,
+            finalStep: s.finalStep + 1,
+          },
         ],
       });
     });
@@ -149,21 +151,45 @@ function Project({ selectedProject }) {
       <div className="flex flex-col h-screen justify-between">
         {selectedProject && (
           <>
-            <div className="p-4 sm:ml-64 flex items-center justify-between">
-              <div className="text-4xl font-semibold">
-                {selectedProject.name}
-              </div>
-              {!isSimulationRunning && (
-                <div>
+            <div className="p-4 sm:ml-64">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  {/* <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
+                    {selectedProject.name}
+                  </h1> */}
+                  <div className="relative inline-flex items-center gap-2 text-sm p-0.5 overflow-hidden text-gray-900 rounded-full group bg-gradient-to-br from-green-400 to-blue-600">
+                    <span className="relative flex items-center gap-2 px-3 py-1.5 bg-white rounded-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="size-4 text-slate-400"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      <span className="font-medium text-gray-700">
+                        45 minutes/step
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                {!isSimulationRunning && (
                   <button
                     type="button"
                     onClick={() => refreshSimulation()}
-                    className="text-gray-900 flex gap-2 items-center bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-md px-5 py-2.5"
+                    className="relative inline-flex items-center justify-center gap-1.5 text-sm p-0.5 overflow-hidden text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white focus:ring-4 focus:ring-green-200 font-medium"
                   >
-                    <ArrowPathIcon className="size-5" /> Reset
+                    <span className="relative flex items-center gap-1.5 px-3 py-1.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
+                      <ArrowPathIcon className="size-4" />
+                      Reset
+                    </span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
             <div className="px-4 pb-4 overflow-y-auto flex-grow sm:ml-64">
               {simulation.map((s, index) => {

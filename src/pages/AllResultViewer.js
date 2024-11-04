@@ -17,9 +17,10 @@ import {
   ClockIcon,
 } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 
 function AllResultViewer() {
+  const FRAME_RATE = 45;
   const { resultIds } = useParams();
   const resultIdArray = resultIds.split(",");
   const [currentStep, setCurrentStep] = useState(0);
@@ -38,7 +39,7 @@ function AllResultViewer() {
   quantum.register();
 
   const formatRealTime = (step) => {
-    const totalSeconds = step * 45;
+    const totalSeconds = step * 60;
     const days = Math.floor(totalSeconds / (24 * 3600));
     const remainingSeconds = totalSeconds % (24 * 3600);
     const hours = Math.floor(remainingSeconds / 3600);
@@ -104,7 +105,7 @@ function AllResultViewer() {
           stepsMap[item.resultId] = item.finalStep;
           experimentResultDetailMap[item.resultId] = item;
         });
-        setMaxFinalStep(Math.max(...Object.values(stepsMap)) - 1);
+        setMaxFinalStep(Math.max(...Object.values(stepsMap)));
         setExperimentResultDetails(experimentResultDetailMap);
       } catch (error) {
         console.error("Error fetching final steps:", error);
@@ -262,14 +263,14 @@ function AllResultViewer() {
 
   return (
     <div>
-      <button
+      {/* <button
         type="button"
         className="fixed top-8 left-8 flex gap-2 text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 transition-colors"
         onClick={() => navigate("/")}
       >
         <ArrowUturnLeftIcon className="size-5" />
         Back to home
-      </button>
+      </button> */}
 
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-center text-4xl font-semibold mt-12">
@@ -286,16 +287,16 @@ function AllResultViewer() {
           <span className="text-sm font-medium text-gray-900">Speed</span>
           <input
             type="range"
-            min="10"
-            max="5001"
+            min="1"
+            max="1501"
             step="10"
             value={speed}
             onChange={handleSpeedChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          <span className="text-sm font-medium text-gray-900">
-            {Math.round((speed / 1000) * 100) / 100}s
-          </span>
+          {/* <span className="text-sm font-medium text-gray-900">
+            {Math.round((speed / 1000) * 1000) / 1000}s
+          </span> */}
         </div>
       </div>
 
@@ -312,8 +313,9 @@ function AllResultViewer() {
         <button
           type="button"
           onClick={() => {
-            if (currentStep > 0) {
-              setCurrentStep(currentStep - 1);
+            if (currentStep >= FRAME_RATE) {
+              setCurrentStep(currentStep - FRAME_RATE);
+              setInputStep(currentStep - FRAME_RATE);
             }
           }}
           disabled={isPlaying}
@@ -337,8 +339,9 @@ function AllResultViewer() {
         <button
           type="button"
           onClick={() => {
-            if (currentStep < maxFinalStep) {
-              setCurrentStep(currentStep + 1);
+            if (currentStep + FRAME_RATE < maxFinalStep) {
+              setCurrentStep(currentStep + FRAME_RATE);
+              setInputStep(currentStep + FRAME_RATE);
             }
           }}
           disabled={isPlaying}
@@ -409,7 +412,7 @@ function AllResultViewer() {
               : "grid-cols-3 max-w-[90%]"
           } gap-8 mx-auto p-8`}
         >
-          {resultIdArray.map((resultId, resultIndex) => (
+          {resultIdArray.map((resultId) => (
             <div
               key={resultId}
               className="border rounded-lg p-6 bg-white shadow-lg"
@@ -417,22 +420,50 @@ function AllResultViewer() {
               <h2 className="text-2xl font-bold mb-6 text-center">
                 {experimentResultDetails[resultId]?.experimentName}
               </h2>
-              <div className="flex flex-wrap gap-6 items-start justify-center">
-                {images[resultId]?.map((image, imageIndex) => (
-                  <div key={imageIndex} className="flex flex-col items-center">
-                    <div className="bg-white border w-fit p-4 border-gray-300 rounded-lg shadow-md">
-                      <img
-                        alt={image.name}
-                        src={`data:image/jpeg;base64,${image.encodedImage}`}
-                        className="max-w-full h-auto"
-                      />
+              {images[resultId]?.map((image, imageIndex) => (
+                <div key={imageIndex} className="group">
+                  <div
+                    onClick={() =>
+                      navigate(
+                        `/result/${resultId}/view-steps?finalStep=${experimentResultDetails[resultId]?.finalStep}`
+                      )
+                    }
+                    className="relative bg-white border border-gray-300 rounded-lg 
+                transition-all duration-300 ease-in-out
+                cursor-pointer 
+                hover:scale-[1.02]
+                hover:shadow-xl
+                hover:border-blue-400"
+                  >
+                    {/* Overlay when hover */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 rounded-lg flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 bg-white/90 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-opacity duration-300">
+                        <MagnifyingGlassIcon className="w-5 h-5 text-blue-600" />
+                        <span className="text-blue-600 font-medium">
+                          Click to view details
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-medium mt-3 text-gray-700">
-                      {image.name}
-                    </h3>
+
+                    <img
+                      alt={image.name}
+                      src={`data:image/jpeg;base64,${image.encodedImage}`}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
-                ))}
-              </div>
+
+                  {/* <h3 className="text-lg font-medium mt-3 text-center text-gray-700">
+                    {image.name}
+                  </h3> */}
+
+                  <p className="text-sm text-gray-500 mt-1 text-center">
+                    {experimentResultDetails[resultId]?.finalStep
+                      ? experimentResultDetails[resultId]?.finalStep - 1
+                      : 0}{" "}
+                    steps available
+                  </p>
+                </div>
+              ))}
             </div>
           ))}
         </div>

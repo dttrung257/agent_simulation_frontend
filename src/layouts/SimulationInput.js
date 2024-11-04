@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+const FRAME_RATE = 45;
+
 function SimulationInput({
   title,
   currentValue,
@@ -22,13 +24,38 @@ function SimulationInput({
     "bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5";
 
   const [error, setError] = useState(errorInputFieldMessage);
+  const [timeString, setTimeString] = useState("");
+
+  const formatTime = (seconds) => {
+    seconds = seconds * 60;
+    const days = Math.floor(seconds / (24 * 3600));
+    const remainingSeconds = seconds % (24 * 3600);
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+    const secs = remainingSeconds % 60;
+
+    const formattedHours = hours.toString().padStart(2, "0");
+    const formattedMinutes = minutes.toString().padStart(2, "0");
+    const formattedSeconds = secs.toString().padStart(2, "0");
+
+    return days > 0
+      ? `${days} days, ${formattedHours}:${formattedMinutes}:${formattedSeconds}s`
+      : `${formattedHours}:${formattedMinutes}:${formattedSeconds}s`;
+  };
 
   const handleInputField = (e) => {
-    setValue(e.target.value);
-    if (e.target.value < 1 || e.target.value > 100000) {
+    const value = parseInt(e.target.value);
+    setValue(value);
+
+    if (value < 1 || value > 100000) {
       setError(errorInputFieldMessage);
+      setTimeString("");
+    } else if (value % FRAME_RATE !== 0) {
+      setError(`Value must be a multiple of ${FRAME_RATE}`);
+      setTimeString("");
     } else {
       setError("No Error");
+      setTimeString(formatTime(value)); // 1 step = 1 second
     }
   };
 
@@ -38,9 +65,6 @@ function SimulationInput({
         {title}
       </h2>
       <form className="w-full mb-4 mx-auto">
-        {/* <label className="block truncate mb-2 text-sm font-medium text-gray-900">
-          Choose {title.toString().toLowerCase()}
-        </label> */}
         {name !== "finalStep" ? (
           <select
             disabled={disabled || isSimulationRunning}
@@ -74,28 +98,26 @@ function SimulationInput({
               className={
                 value === defaultValue
                   ? defaultInputFormat
-                  : value > 0 && value <= 100000
+                  : value > 0 && value <= 100000 && value % FRAME_RATE === 0
                   ? validInputFormat
                   : errorInputFormat
               }
-              placeholder="1-100,000"
+              placeholder={`Enter multiple of ${FRAME_RATE} (1-100,000)`}
               onChange={onChange}
               onInput={(e) => handleInputField(e)}
               required
             />
-            {(value < 1 || value > 100000) && (
-              <p className="mt-2 text-sm text-red-600 dark:text-red-500">
-                Please enter number between{" "}
-                <span className="font-medium">1 and 100,000</span>
+            {timeString && (
+              <p className="mt-2 text-sm text-blue-600">End at: {timeString}</p>
+            )}
+            {error !== "No Error" && (
+              <p className="mt-2 text-sm text-red-600">
+                <span className="font-medium">{error}</span>
               </p>
             )}
           </>
         )}
       </form>
-
-      {!disabled &&
-        error === errorInputFieldMessage &&
-        name === "finalStep" && <></>}
     </div>
   );
 }

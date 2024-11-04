@@ -9,11 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import "ldrs/hourglass";
 import { ring2 } from "ldrs";
-import {
-  ArrowDownTrayIcon,
-  InformationCircleIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+import { ArrowDownTrayIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import Alert from "../layouts/Alert";
 
 function Simulation({
@@ -65,7 +61,12 @@ function Simulation({
       checkSimulationFinish();
       return;
     }
-    if (isSimulationRunning && status === 0 && currentStep === null && simulation.resultId) {
+    if (
+      isSimulationRunning &&
+      status === 0 &&
+      currentStep === null &&
+      simulation.resultId
+    ) {
       checkSimulationStatus(simulation.resultId);
     }
   }, [isSimulationRunning, currentStep, status, hasError]);
@@ -93,14 +94,22 @@ function Simulation({
       try {
         const response = await getResultStatus(resultId);
         const data = response.data.data;
-  
+
         setFinalStep(data.currentStep);
         setStatus(data.status);
-  
+
         setCurrentStep(data.currentStep ?? 0);
         setProgress((data.currentStep / simulation.finalStep) * 100);
-  
-        if ((data.status === 2 && data.currentStep === finalStep) || data.status === 3) {
+
+        if (data.status === 2 && data.currentStep === null) {
+          clearInterval(interval.current);
+          interval.current = setInterval(updateStatus, 3000);
+        }
+
+        if (
+          (data.status === 2 && data.currentStep === finalStep) ||
+          data.status === 3
+        ) {
           clearInterval(interval.current);
           interval.current = setInterval(updateStatus, 500);
         }
@@ -108,8 +117,8 @@ function Simulation({
         console.log(error);
       }
     };
-  
-    interval.current = setInterval(updateStatus, 1500);
+
+    interval.current = setInterval(updateStatus, 2000);
   };
 
   const handleChange = (e) => {
@@ -172,7 +181,7 @@ function Simulation({
             )}
           {!isSimulationRunning && (
             <button
-              onClick={removeSimulation}
+              onClick={() => removeSimulation(simulation.order)}
               className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
             >
               <div>
@@ -220,7 +229,8 @@ function Simulation({
         {currentStep !== null && !hasError && (
           <div className="w-full">
             <div className="text-right font-medium text-lg mb-2 mt-4">
-              {currentStep}/{simulation.finalStep}{" "}
+              {currentStep > 0 ? currentStep - 1 : currentStep}/
+              {simulation.finalStep}{" "}
               {simulation.finalStep >= 2 ? "steps" : "step"}
             </div>
             <div className="w-full mb-4 bg-gray-200 rounded-full h-2">
@@ -231,16 +241,26 @@ function Simulation({
             </div>
           </div>
         )}
-        {hasError && (
-          <Alert message={RUN_FAIL} type={"error"} />
-        )}
-        {(status === 2) && !hasError && (
+        {hasError && <Alert message={RUN_FAIL} type={"error"} />}
+        {status === 2 && !hasError && (
           <>
             <div className="flex items-center mt-4 justify-between">
               <div>
-                {currentStep === 0 && (<Alert message={STARTING_GAMA_HEADLESS_MESSAGE} type={"info"} />)}
-                {currentStep > 0 && currentStep < simulation.finalStep && (<Alert message={SIMULATION_IS_RUNNING_MESSAGE} type={"info"} />)}
-                {currentStep === simulation.finalStep && (<Alert message={SAVING_RESULT_MESSAGE} type={"info"} />)}
+                {currentStep === 0 && (
+                  <Alert
+                    message={STARTING_GAMA_HEADLESS_MESSAGE}
+                    type={"info"}
+                  />
+                )}
+                {currentStep > 0 && currentStep < simulation.finalStep && (
+                  <Alert
+                    message={SIMULATION_IS_RUNNING_MESSAGE}
+                    type={"info"}
+                  />
+                )}
+                {currentStep === simulation.finalStep && (
+                  <Alert message={SAVING_RESULT_MESSAGE} type={"info"} />
+                )}
               </div>
             </div>
           </>
@@ -250,10 +270,16 @@ function Simulation({
             <div className="flex items-center mt-4 justify-between">
               <div>
                 {status !== 5 && downloadUrl === null && (
-                  <Alert message={PREPARE_DATA_FOR_DOWNLOAD_MESSAGE} type={"info"} />
+                  <Alert
+                    message={PREPARE_DATA_FOR_DOWNLOAD_MESSAGE}
+                    type={"info"}
+                  />
                 )}
                 {status === 5 && downloadUrl !== null && (
-                  <Alert message={READY_FOR_DOWNLOAD_MESSAGE} type={"success"} />
+                  <Alert
+                    message={READY_FOR_DOWNLOAD_MESSAGE}
+                    type={"success"}
+                  />
                 )}
               </div>
               <div className="place-items-center gap-4 grid grid-flow-col">
