@@ -98,8 +98,12 @@ function Simulation({
         setFinalStep(data.currentStep);
         setStatus(data.status);
 
-        setCurrentStep(data.currentStep ?? 0);
-        setProgress((data.currentStep / simulation.finalStep) * 100);
+        const currentStep = data.currentStep ?? 0;
+        setCurrentStep(currentStep);
+
+        let progress = (currentStep / simulation.finalStep) * 100;
+        progress = progress > 100 ? 100 : progress;
+        setProgress(progress);
 
         if (data.status === 2 && data.currentStep === null) {
           clearInterval(interval.current);
@@ -111,10 +115,12 @@ function Simulation({
           data.status === 3
         ) {
           clearInterval(interval.current);
-          interval.current = setInterval(updateStatus, 500);
+          interval.current = setInterval(updateStatus, 1000);
         }
       } catch (error) {
         console.log(error);
+        setHasError(true);
+        clearInterval(interval.current);
       }
     };
 
@@ -228,10 +234,8 @@ function Simulation({
         </div>
         {currentStep !== null && !hasError && (
           <div className="w-full">
-            <div className="text-right font-medium text-lg mb-2 mt-4">
-              {currentStep > 0 ? currentStep - 1 : currentStep}/
-              {simulation.finalStep}{" "}
-              {simulation.finalStep >= 2 ? "steps" : "step"}
+            <div className="flex justify-end items-center font-medium text-lg mb-2 mt-4">
+              <span className="text-blue-600">{Math.round(progress)}%</span>
             </div>
             <div className="w-full mb-4 bg-gray-200 rounded-full h-2">
               <div

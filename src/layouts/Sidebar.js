@@ -40,7 +40,7 @@ function Sidebar({
 
   return (
     <aside
-      className="fixed top-0 left-0 z-40 w-64 h-screen bg-gray-50 transition-transform -translate-x-full sm:translate-x-0 flex-col"
+      className="fixed top-0 left-0 z-40 w-80 h-screen bg-gray-50 transition-transform -translate-x-full sm:translate-x-0 flex-col"
       aria-label="Sidebar"
     >
       <div className="flex px-3 py-4 items-center gap-2 justify-center text-center">
@@ -88,7 +88,7 @@ function Sidebar({
                 </li>
 
                 {isSelected && isExpanded && (
-                  <ul className="ml-9 mr-4 mt-2 space-y-1 overflow-y-auto max-h-60 transition-all duration-200">
+                  <ul className="ml-9 mr-4 mt-2 space-y-1 overflow-y-auto max-h-96 transition-all duration-200">
                     {modelList.map((model) => (
                       <li
                         key={model.id}

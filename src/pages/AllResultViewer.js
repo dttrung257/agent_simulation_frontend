@@ -6,7 +6,6 @@ import {
   getExperimentResultDetail,
 } from "../api/simulationApi";
 import {
-  ArrowUturnLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
@@ -54,6 +53,23 @@ function AllResultViewer() {
     return days > 0
       ? `Day ${formattedDays}, ${formattedHours}:${formattedMinutes}:${formattedSeconds}s`
       : `${formattedHours}:${formattedMinutes}:${formattedSeconds}s`;
+  };
+
+  const formatTotalTime = (step) => {
+    const totalSeconds = step * 60;
+    const days = Math.floor(totalSeconds / (24 * 3600));
+    const remainingSeconds = totalSeconds % (24 * 3600);
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+    const seconds = remainingSeconds % 60;
+
+    const formattedHours = hours.toString().padStart(2, "0");
+    const formattedMinutes = minutes.toString().padStart(2, "0");
+    const formattedSeconds = seconds.toString().padStart(2, "0");
+
+    return days > 0
+      ? `${days} days, ${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+      : `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   };
 
   useEffect(() => {
@@ -203,16 +219,35 @@ function AllResultViewer() {
     if (Object.keys(categoryId).length === 0) return;
 
     setLoading(true);
-    try {
-      const imagePromises = resultIdArray.map((resultId) =>
-        getImageResultFromRange(resultId, currentStep, currentStep)
-      );
 
-      const responses = await Promise.all(imagePromises);
+    const imagePromises = resultIdArray.map(async (resultId) => {
+      try {
+        const response = await getImageResultFromRange(
+          resultId,
+          currentStep,
+          currentStep
+        );
+        return {
+          resultId,
+          success: true,
+          data: response.data,
+        };
+      } catch (error) {
+        console.error(`Error fetching images for result ${resultId}:`, error);
+        return {
+          resultId,
+          success: false,
+          data: null,
+        };
+      }
+    });
 
-      const newImages = {};
-      responses.forEach((response, index) => {
-        const resultId = resultIdArray[index];
+    const responses = await Promise.all(imagePromises);
+
+    const newImages = {};
+    responses.forEach((response) => {
+      if (response.success && response.data?.data?.steps?.[0]?.categories) {
+        const resultId = response.resultId;
         const categories = response.data.data.steps[0].categories;
 
         const simulatorImages = categories
@@ -233,12 +268,14 @@ function AllResultViewer() {
         if (simulatorImages.length > 0) {
           newImages[resultId] = simulatorImages;
         }
-      });
+      }
+    });
 
-      setImages(newImages);
-    } catch (error) {
-      console.error("Error fetching images:", error);
-    }
+    setImages((prevImages) => ({
+      ...prevImages,
+      ...newImages,
+    }));
+
     setLoading(false);
   };
 
@@ -273,10 +310,10 @@ function AllResultViewer() {
       </button> */}
 
       <div className="flex flex-col items-center gap-2">
-        <h1 className="text-center text-4xl font-semibold mt-12">
+        <h1 className="text-center text-4xl font-semibold mt-10">
           Step: {currentStep}
         </h1>
-        <div className="flex items-center gap-2 text-2xl text-gray-600">
+        <div className="flex items-center gap-2 text-2xl text-gray-600 mt-2">
           <ClockIcon className="size-6" />
           <span>{formatRealTime(currentStep)}</span>
         </div>
@@ -456,11 +493,19 @@ function AllResultViewer() {
                     {image.name}
                   </h3> */}
 
-                  <p className="text-sm text-gray-500 mt-1 text-center">
+                  {/* <p className="text-sm text-gray-500 mt-1 text-center">
                     {experimentResultDetails[resultId]?.finalStep
                       ? experimentResultDetails[resultId]?.finalStep - 1
                       : 0}{" "}
                     steps available
+                  </p> */}
+                  <p className="text-sm text-gray-500 mt-1 text-center">
+                    Total time:{" "}
+                    {formatTotalTime(
+                      experimentResultDetails[resultId]?.finalStep
+                        ? experimentResultDetails[resultId]?.finalStep - 1
+                        : 0
+                    )}
                   </p>
                 </div>
               ))}

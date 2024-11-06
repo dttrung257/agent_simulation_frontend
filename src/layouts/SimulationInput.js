@@ -39,8 +39,8 @@ function SimulationInput({
     const formattedSeconds = secs.toString().padStart(2, "0");
 
     return days > 0
-      ? `${days} days, ${formattedHours}:${formattedMinutes}:${formattedSeconds}s`
-      : `${formattedHours}:${formattedMinutes}:${formattedSeconds}s`;
+      ? `${days} days, ${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+      : `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   };
 
   const handleInputField = (e) => {
