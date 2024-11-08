@@ -310,7 +310,7 @@ function AllResultViewer() {
       </button> */}
 
       <div className="flex flex-col items-center gap-2">
-        <h1 className="text-center text-4xl font-semibold mt-10">
+        <h1 className="text-center text-4xl font-semibold mt-2">
           Step: {currentStep}
         </h1>
         <div className="flex items-center gap-2 text-2xl text-gray-600 mt-2">
@@ -443,7 +443,7 @@ function AllResultViewer() {
         <div
           className={`grid ${
             resultIdArray.length === 1
-              ? "grid-cols-1 max-w-3xl"
+              ? "grid-cols-1 max-w-2xl"
               : resultIdArray.length === 2
               ? "grid-cols-2 max-w-5xl"
               : "grid-cols-3 max-w-[90%]"

@@ -102,7 +102,17 @@ function Project({ selectedProject }) {
   };
 
   const newRun = () => {
-    window.location.reload();
+    // Reset everything except selected project
+    setSimulation([]);
+    setOrder(1);
+    setError(false);
+    setCheckFinish(0);
+    setIsSimulationRunning(false);
+    setDisableSimulation(false);
+    setSimulationStatus(null);
+    // Refresh model options and node list with current project
+    getModelOptions();
+    getNode();
   };
 
   const updateSimulation = (updatedSimulation, orderUpdate) => {

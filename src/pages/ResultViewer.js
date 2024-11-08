@@ -207,7 +207,7 @@ function ResultViewer() {
       </button> */}
 
       <div className="flex flex-col items-center gap-2">
-        <h1 className="text-center text-4xl font-semibold mt-12">
+        <h1 className="text-center text-4xl font-semibold mt-2">
           Step: {currentStep}
         </h1>
         <div className="flex items-center gap-2 text-2xl text-gray-600">
