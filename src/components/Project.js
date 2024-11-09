@@ -169,6 +169,40 @@ function Project({ selectedProject }) {
                   {/* <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
                     {selectedProject.name}
                   </h1> */}
+                  <div className="relative inline-flex items-center gap-2 text-sm p-0.5 overflow-hidden text-gray-900 rounded-full group bg-gradient-to-br from-green-400 to-blue-600 hover:from-green-400 hover:to-blue-600">
+                    <Link
+                      to={`/simulation-results/${selectedProject.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="relative flex items-center gap-2 px-3 py-1.5 transition-all ease-in duration-75 bg-white rounded-full group-hover:bg-opacity-0"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="size-4 transition-colors group-hover:stroke-white"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="url(#gradient-results)"
+                        strokeWidth="2"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="gradient-results"
+                            x1="0%"
+                            y1="0%"
+                            x2="100%"
+                            y2="100%"
+                          >
+                            <stop offset="0%" stopColor="#4ade80" />
+                            <stop offset="100%" stopColor="#2563eb" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M9 17h6M9 12h6M9 7h6M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H4a2 2 0 00-2 2v16a2 2 0 002 2z" />
+                      </svg>
+                      <span className="font-medium text-gray-700 group-hover:text-white">
+                        Simulation Results
+                      </span>
+                    </Link>
+                  </div>
                   <div className="relative inline-flex items-center gap-2 text-sm p-0.5 overflow-hidden text-gray-900 rounded-full group bg-gradient-to-br from-green-400 to-blue-600">
                     <span className="relative flex items-center gap-2 px-3 py-1.5 bg-white rounded-full">
                       <svg

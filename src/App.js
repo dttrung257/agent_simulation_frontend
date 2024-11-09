@@ -3,6 +3,7 @@ import MainPage from "./pages/MainPage";
 import { Route, Routes } from "react-router-dom";
 import ResultViewer from "./pages/ResultViewer";
 import AllResultViewer from "./pages/AllResultViewer";
+import SimulationResults from "./components/SimulationResults";
 
 function App() {
   return (
@@ -13,6 +14,10 @@ function App() {
       <Route
         path="/result/:resultIds/view-results"
         element={<AllResultViewer />}
+      />
+      <Route
+        path="/simulation-results/:projectId"
+        element={<SimulationResults />}
       />
     </Routes>
   );

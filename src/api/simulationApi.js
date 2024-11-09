@@ -82,3 +82,11 @@ export const getDownloadSimulationResultURL = async (resultId) => {
 export const getExperimentResultDetail = async (resultId) => {
   return await axiosInstance.get(`/experiment_results/${resultId}`);
 };
+
+export const getSimulationResults = async (projectId) => {
+  return await axiosInstance.get(`/simulations?project_id=${projectId}`);
+};
+
+export const deleteSimulation = async (simulationId) => {
+  return await axiosInstance.delete(`/simulations/${simulationId}`);
+};
