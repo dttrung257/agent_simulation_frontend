@@ -7,8 +7,10 @@ import {
   getNodeList,
   runSimulation,
 } from "../api/simulationApi";
-import { ArrowPathIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
+
+const FRAME_RATE = 45;
 
 function Project({ selectedProject }) {
   const [nodeList, setNodeList] = useState([]);
@@ -195,7 +197,7 @@ function Project({ selectedProject }) {
                         <polyline points="12 6 12 12 16 14"></polyline>
                       </svg>
                       <span className="font-medium text-gray-700">
-                        1 step = 1 minute
+                        1 step ~ {FRAME_RATE} minutes
                       </span>
                     </span>
                   </div>
@@ -233,7 +235,7 @@ function Project({ selectedProject }) {
                         />
                       </svg>
                       <span className="font-medium text-gray-700">
-                        captured every 45 minutes
+                        captured every {FRAME_RATE} minutes
                       </span>
                     </span>
                   </div>
@@ -281,7 +283,7 @@ function Project({ selectedProject }) {
                   >
                     <span className="relative flex items-center gap-1.5 px-3 py-1.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
                       <ArrowPathIcon className="size-4" />
-                      Reset
+                      Clear
                     </span>
                   </button>
                 )}
@@ -364,14 +366,16 @@ function Project({ selectedProject }) {
                   onClick={() => runSimulationEvent()}
                 >
                   <span className="relative flex items-center gap-2 px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
-                    {isSimulationRunning && (
+                    {isSimulationRunning ? (
                       <l-ring-2
                         size="20"
                         stroke={3}
                         bg-opacity="0.1"
                         speed="1"
                         color="currentColor"
-                      ></l-ring-2>
+                      />
+                    ) : (
+                      <PlayIcon className="size-5" />
                     )}
                     {!isSimulationRunning
                       ? "Run Simulation"

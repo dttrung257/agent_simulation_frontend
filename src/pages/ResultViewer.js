@@ -5,7 +5,6 @@ import {
   getCategoriesResult,
 } from "../api/simulationApi";
 import {
-  ArrowUturnLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
@@ -25,6 +24,7 @@ function ResultViewer() {
   const [searchParams] = useSearchParams();
   const finalStep = parseInt(searchParams.get("finalStep"));
   const [currentStep, setCurrentStep] = useState(0);
+  const [displayStep, setDisplayStep] = useState(0);
   const [categoryId, setCategoryId] = useState([]);
   const [inputStep, setInputStep] = useState(0);
   const [images, setImages] = useState([]);
@@ -32,15 +32,16 @@ function ResultViewer() {
   const [error, setError] = useState(false);
   const navigate = useNavigate();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState(100); // Default speed: 100 milliseconds = 0.1 seconds
+  const [speed, setSpeed] = useState(100);
   const eventSourceRef = useRef(null);
 
   quantum.register();
 
-  const formatRealTime = (step) => {
-    // 1 step = 60 seconds
-    const totalSeconds = step * 60;
+  const actualStepToDisplayStep = (step) => Math.floor(step / FRAME_RATE);
+  const displayStepToActualStep = (display) => display * FRAME_RATE;
 
+  const formatRealTime = (step) => {
+    const totalSeconds = step * 60;
     const days = Math.floor(totalSeconds / (24 * 3600));
     const remainingSeconds = totalSeconds % (24 * 3600);
     const hours = Math.floor(remainingSeconds / 3600);
@@ -96,6 +97,7 @@ function ResultViewer() {
       if (data.steps && data.steps.length > 0) {
         const step = data.steps[0];
         setCurrentStep(step.step);
+        setDisplayStep(actualStepToDisplayStep(step.step));
 
         const newImages = step.categories.map((category) => {
           const categoryName = categoryId.find(
@@ -128,20 +130,22 @@ function ResultViewer() {
   const resetToStart = () => {
     stopAnimation();
     setCurrentStep(0);
+    setDisplayStep(0);
     setInputStep(0);
   };
 
   const goToEnd = () => {
     stopAnimation();
-    setCurrentStep(finalStep - 1);
-    setInputStep(finalStep - 1);
+    const lastStep = finalStep - 1;
+    setCurrentStep(lastStep);
+    setDisplayStep(actualStepToDisplayStep(lastStep));
+    setInputStep(actualStepToDisplayStep(lastStep));
   };
 
   const handleSpeedChange = (e) => {
     const newSpeed = parseFloat(e.target.value);
     setSpeed(newSpeed);
     if (isPlaying) {
-      // Restart animation with new speed
       stopAnimation();
       setTimeout(startAnimation, 0);
     }
@@ -181,34 +185,26 @@ function ResultViewer() {
 
   const handleChange = (e) => {
     setError(false);
-    setInputStep(parseInt(e.target.value));
+    const newDisplayStep = parseInt(e.target.value);
+    setInputStep(newDisplayStep);
   };
 
   const handleStepInput = () => {
-    if (inputStep > parseInt(finalStep) - 1 || inputStep < 0) {
+    const maxDisplayStep = actualStepToDisplayStep(finalStep - 1);
+    if (inputStep > maxDisplayStep || inputStep < 0) {
       setError(true);
       return;
     }
-    setCurrentStep(inputStep);
+    const newActualStep = displayStepToActualStep(inputStep);
+    setCurrentStep(newActualStep);
+    setDisplayStep(inputStep);
   };
 
   return (
     <div>
-      {/* <h1 className="text-center text-7xl font-semibold mt-24 mb-6">
-        Step Viewer
-      </h1> */}
-      {/* <button
-        type="button"
-        className="fixed top-8 left-8 flex gap-2 text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:ring-gray-200 font-medium rounded-lg text-sm px-5 py-2.5 transition-colors"
-        onClick={() => navigate("/")}
-      >
-        <ArrowUturnLeftIcon className="size-5" />
-        Back to home
-      </button> */}
-
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-center text-4xl font-semibold mt-2">
-          Step: {currentStep}
+          Step: {displayStep}
         </h1>
         <div className="flex items-center gap-2 text-2xl text-gray-600">
           <ClockIcon className="size-6" />
@@ -228,14 +224,6 @@ function ResultViewer() {
             onChange={handleSpeedChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
           />
-          {/* <span className="text-sm font-medium text-gray-900">
-            {Math.round((speed / 1000) * 100) / 100}s
-          </span> */}
-        </div>
-
-        <div className="flex items-center justify-between text-sm text-gray-600 mt-1">
-          {/* <span>{formatRealTime(0)}</span>
-          <span>{formatRealTime(finalStep - 1)}</span> */}
         </div>
       </div>
 
@@ -253,8 +241,10 @@ function ResultViewer() {
           type="button"
           onClick={() => {
             if (currentStep >= FRAME_RATE) {
-              setCurrentStep(currentStep - FRAME_RATE);
-              setInputStep(currentStep - FRAME_RATE);
+              const newStep = currentStep - FRAME_RATE;
+              setCurrentStep(newStep);
+              setDisplayStep(actualStepToDisplayStep(newStep));
+              setInputStep(actualStepToDisplayStep(newStep));
             }
           }}
           disabled={isPlaying}
@@ -279,8 +269,10 @@ function ResultViewer() {
           type="button"
           onClick={() => {
             if (currentStep + FRAME_RATE < parseInt(finalStep)) {
-              setCurrentStep(currentStep + FRAME_RATE);
-              setInputStep(currentStep + FRAME_RATE);
+              const newStep = currentStep + FRAME_RATE;
+              setCurrentStep(newStep);
+              setDisplayStep(actualStepToDisplayStep(newStep));
+              setInputStep(actualStepToDisplayStep(newStep));
             }
           }}
           disabled={isPlaying}
@@ -294,7 +286,6 @@ function ResultViewer() {
           onClick={goToEnd}
           disabled={isPlaying}
           className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50"
-          title="Go to end"
         >
           <ForwardIcon className="size-5" />
         </button>
@@ -312,10 +303,11 @@ function ResultViewer() {
           onChange={handleChange}
           disabled={isPlaying}
           className="block w-full p-4 ps-10 text-md text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-50 disabled:opacity-50"
-          // placeholder={`Step 0 to ${finalStep - 1}`}
-          placeholder={`Step 0 (${formatRealTime(0)}) to ${
+          placeholder={`Step 0 (${formatRealTime(
+            0
+          )}) to ${actualStepToDisplayStep(finalStep - 1)} (${formatRealTime(
             finalStep - 1
-          } (${formatRealTime(finalStep - 1)})`}
+          )})`}
           required
         />
         <button
@@ -332,7 +324,8 @@ function ResultViewer() {
         {error && (
           <p className="mt-2 text-sm text-red-600">
             <span className="font-medium">
-              Invalid input! Please choose step between 0 and {finalStep - 1}
+              Invalid input! Please choose step between 0 and{" "}
+              {actualStepToDisplayStep(finalStep - 1)}
             </span>
           </p>
         )}

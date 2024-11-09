@@ -115,7 +115,7 @@ function Simulation({
           data.status === 3
         ) {
           clearInterval(interval.current);
-          interval.current = setInterval(updateStatus, 1000);
+          interval.current = setInterval(updateStatus, 700);
         }
       } catch (error) {
         console.log(error);
@@ -235,14 +235,47 @@ function Simulation({
         {currentStep !== null && !hasError && (
           <div className="w-full">
             <div className="flex justify-end items-center font-medium text-lg mb-2 mt-4">
-              <span className="text-blue-600">{Math.round(progress)}%</span>
+              <span className="text-teal-600 font-bold">
+                {Math.round(progress)}%
+              </span>
             </div>
-            <div className="w-full mb-4 bg-gray-200 rounded-full h-2">
+            <div className="w-full mb-4 bg-gray-100 rounded-full h-3 relative overflow-hidden shadow-inner">
               <div
                 style={{ width: `${progress}%` }}
-                className="bg-blue-600 h-2 rounded-full "
-              ></div>
+                className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-teal-400 to-green-400 transition-all duration-500 ease-out relative group"
+              >
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"></div>
+
+                {/* Glowing effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-teal-400/20 to-green-400/20 blur-sm"></div>
+
+                {/* Arrow head */}
+                <div className="absolute -right-1.5 top-1/2 -translate-y-1/2">
+                  <div className="bg-gradient-to-br from-teal-400 to-green-400 transform rotate-45 w-3 h-3 shadow-lg"></div>
+                </div>
+
+                {/* Pulse effect at the end */}
+                <div className="absolute -right-1 top-1/2 -translate-y-1/2">
+                  <div className="absolute size-4 bg-teal-500/30 rounded-full animate-ping"></div>
+                </div>
+              </div>
             </div>
+
+            {/* Add keyframes for shimmer animation */}
+            <style jsx>{`
+              @keyframes shimmer {
+                0% {
+                  transform: translateX(-100%);
+                }
+                100% {
+                  transform: translateX(100%);
+                }
+              }
+              .animate-shimmer {
+                animation: shimmer 2s infinite;
+              }
+            `}</style>
           </div>
         )}
         {hasError && <Alert message={RUN_FAIL} type={"error"} />}
