@@ -9,6 +9,7 @@ import {
   ArrowDownTrayIcon,
   EyeIcon,
   TrashIcon,
+  ClockIcon,
 } from "@heroicons/react/24/solid";
 import Alert from "../layouts/Alert";
 
@@ -21,20 +22,18 @@ const SimulationResults = () => {
   const [downloadStatus, setDownloadStatus] = useState({});
   const [deleteStatus, setDeleteStatus] = useState({});
 
-  const fetchResults = async () => {
-    try {
-      const response = await getSimulationResults(projectId);
-      setResults(response.data.data);
-    } catch (error) {
-      console.error("Error fetching simulation results:", error);
-    } finally {
-      setLoading(false);
-    }
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(date);
   };
-
-  useEffect(() => {
-    fetchResults();
-  }, [projectId]);
 
   const formatTime = (minutes) => {
     const days = Math.floor(minutes / (24 * 60));
@@ -52,6 +51,21 @@ const SimulationResults = () => {
       .padStart(2, "0")}`;
   };
 
+  const fetchResults = async () => {
+    try {
+      const response = await getSimulationResults(projectId);
+      setResults(response.data.data);
+    } catch (error) {
+      console.error("Error fetching simulation results:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchResults();
+  }, [projectId]);
+
   const handleDelete = async (simulationId) => {
     if (!window.confirm("Are you sure you want to delete this simulation?")) {
       return;
@@ -60,13 +74,8 @@ const SimulationResults = () => {
     try {
       setDeleteStatus((prev) => ({ ...prev, [simulationId]: "loading" }));
       await deleteSimulation(simulationId);
-
       setDeleteStatus((prev) => ({ ...prev, [simulationId]: "success" }));
-
-      // Reload the results
       await fetchResults();
-
-      // Clear success status after 3 seconds
       setTimeout(() => {
         setDeleteStatus((prev) => {
           const newStatus = { ...prev };
@@ -77,8 +86,6 @@ const SimulationResults = () => {
     } catch (error) {
       console.error("Error deleting simulation:", error);
       setDeleteStatus((prev) => ({ ...prev, [simulationId]: "error" }));
-
-      // Clear error status after 3 seconds
       setTimeout(() => {
         setDeleteStatus((prev) => {
           const newStatus = { ...prev };
@@ -95,7 +102,6 @@ const SimulationResults = () => {
       const response = await getDownloadSimulationResultURL(resultId);
       const downloadUrl = response.data.data.downloadUrl;
 
-      // Create a temporary link element and trigger download
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.target = "_blank";
@@ -104,8 +110,6 @@ const SimulationResults = () => {
       document.body.removeChild(link);
 
       setDownloadStatus((prev) => ({ ...prev, [resultId]: "success" }));
-
-      // Clear status after 3 seconds
       setTimeout(() => {
         setDownloadStatus((prev) => {
           const newStatus = { ...prev };
@@ -116,8 +120,6 @@ const SimulationResults = () => {
     } catch (error) {
       console.error("Error downloading result:", error);
       setDownloadStatus((prev) => ({ ...prev, [resultId]: "error" }));
-
-      // Clear error status after 3 seconds
       setTimeout(() => {
         setDownloadStatus((prev) => {
           const newStatus = { ...prev };
@@ -138,7 +140,7 @@ const SimulationResults = () => {
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
         Simulation Results
       </h2>
 
@@ -146,9 +148,12 @@ const SimulationResults = () => {
         {results.map((simulation) => (
           <div key={simulation.id} className="border rounded-lg p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-700">
-                Simulation #{simulation.id}
-              </h3>
+              <div className="flex items-center gap-2">
+                <ClockIcon className="w-5 h-5 text-gray-500" />
+                <h3 className="text-lg font-semibold text-gray-700">
+                  {formatDate(simulation.createdAt)}
+                </h3>
+              </div>
               <button
                 onClick={() => handleDelete(simulation.id)}
                 disabled={deleteStatus[simulation.id] === "loading"}
