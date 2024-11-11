@@ -130,9 +130,13 @@ function SimulationInput({
             onInput={(e) => {
               setValue(e.target.value);
             }}
-            className={`${
-              currentValue === null ? defaultInputFormat : validInputFormat
-            }`}
+            className={
+              disabled || isSimulationRunning
+                ? "bg-gray-100 border border-gray-200 text-gray-400 text-sm rounded-lg cursor-not-allowed block w-full p-2.5"
+                : currentValue === null
+                ? defaultInputFormat
+                : validInputFormat
+            }
           >
             <option hidden key="title">
               {defaultValue}

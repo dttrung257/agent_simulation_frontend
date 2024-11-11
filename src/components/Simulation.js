@@ -199,18 +199,9 @@ function Simulation({
 
         <div className="grid grid-cols-4 gap-4">
           <SimulationInput
-            title="Node"
-            name="nodeId"
-            disabled={false}
-            currentValue={simulation.nodeId}
-            options={nodeOptions}
-            onChange={handleChange}
-            isSimulationRunning={isSimulationRunning}
-          />
-          <SimulationInput
             title="Model"
             name="modelId"
-            disabled={simulation.nodeId == null}
+            disabled={false} // Model luôn có thể chọn
             currentValue={simulation.modelId}
             options={modelOptions}
             onChange={handleChange}
@@ -218,14 +209,23 @@ function Simulation({
           <SimulationInput
             title="Experiment"
             name="experimentId"
-            disabled={simulation.modelId == null}
+            disabled={simulation.modelId == null} // Chỉ chọn được khi đã có Model
             currentValue={simulation.experimentId}
             options={experimentOptions}
             onChange={handleChange}
             isSimulationRunning={isSimulationRunning}
           />
           <SimulationInput
-            title="Final Step"
+            title="Node"
+            name="nodeId"
+            disabled={simulation.experimentId == null} // Chỉ chọn được khi đã có Experiment
+            currentValue={simulation.nodeId}
+            options={nodeOptions}
+            onChange={handleChange}
+            isSimulationRunning={isSimulationRunning}
+          />
+          <SimulationInput
+            title="Time"
             name="finalStep"
             currentValue={simulation.finalStep}
             onChange={handleChange}
