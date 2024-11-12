@@ -35,20 +35,24 @@ const SimulationResults = () => {
     }).format(date);
   };
 
-  const formatTime = (minutes) => {
-    const days = Math.floor(minutes / (24 * 60));
-    const remainingMinutes = minutes % (24 * 60);
-    const hours = Math.floor(remainingMinutes / 60);
-    const mins = remainingMinutes % 60;
+  const formatTime = (steps) => {
+    // Convert steps to seconds
+    const totalSeconds = Math.floor((steps * 60) / FRAME_RATE);
+
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    const remainingSeconds = totalSeconds % (24 * 60 * 60);
+    const hours = Math.floor(remainingSeconds / (60 * 60));
+    const minutes = Math.floor((remainingSeconds % (60 * 60)) / 60);
+    const seconds = remainingSeconds % 60;
 
     if (days > 0) {
-      return `${days} days, ${hours.toString().padStart(2, "0")}:${mins
+      return `${days} days, ${hours.toString().padStart(2, "0")}:${minutes
         .toString()
-        .padStart(2, "0")}`;
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
     }
-    return `${hours.toString().padStart(2, "0")}:${mins
+    return `${hours.toString().padStart(2, "0")}:${minutes
       .toString()
-      .padStart(2, "0")}`;
+      .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const fetchResults = async () => {

@@ -58,6 +58,7 @@ function AllResultViewer() {
   const formatTotalTime = (step) => {
     const totalSeconds = step * 60;
     const days = Math.floor(totalSeconds / (24 * 3600));
+    const daysString = days > 1 ? `days` : "day";
     const remainingSeconds = totalSeconds % (24 * 3600);
     const hours = Math.floor(remainingSeconds / 3600);
     const minutes = Math.floor((remainingSeconds % 3600) / 60);
@@ -68,7 +69,7 @@ function AllResultViewer() {
     const formattedSeconds = seconds.toString().padStart(2, "0");
 
     return days > 0
-      ? `${days} days, ${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+      ? `${days} ${daysString}, ${formattedHours}:${formattedMinutes}:${formattedSeconds}`
       : `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   };
 
@@ -163,7 +164,10 @@ function AllResultViewer() {
             (cat) => cat.id === category.categoryId
           )?.name;
 
-          if (categoryName?.toLowerCase().includes("simulator")) {
+          if (
+            categoryName?.toLowerCase().includes("simulator") ||
+            categoryName?.toLowerCase().includes("pigpen")
+          ) {
             if (!newImages[category.experimentResultId]) {
               newImages[category.experimentResultId] = [];
             }
@@ -255,7 +259,10 @@ function AllResultViewer() {
             const categoryName = categoryId[resultId]?.find(
               (cat) => cat.id === category.categoryId
             )?.name;
-            return categoryName?.toLowerCase().includes("simulator");
+            return (
+              categoryName?.toLowerCase().includes("simulator") ||
+              categoryName?.toLowerCase().includes("pigpen")
+            );
           })
           .map((category) => ({
             id: category.categoryId,
@@ -489,9 +496,9 @@ function AllResultViewer() {
                     />
                   </div>
 
-                  {/* <h3 className="text-lg font-medium mt-3 text-center text-gray-700">
+                  <h3 className="text-lg font-medium mt-3 text-center text-gray-700">
                     {image.name}
-                  </h3> */}
+                  </h3>
 
                   {/* <p className="text-sm text-gray-500 mt-1 text-center">
                     {experimentResultDetails[resultId]?.finalStep
