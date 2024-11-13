@@ -90,3 +90,13 @@ export const getSimulationResults = async (projectId) => {
 export const deleteSimulation = async (simulationId) => {
   return await axiosInstance.delete(`/simulations/${simulationId}`);
 };
+
+export const runMultiSimulation = async (params) => {
+  return await axiosInstance.post("/simulations/cluster/multi_simulation", {
+    finalStep: params.finalStep,
+    numberPigpen: params.numberPigpen,
+    initDiseaseAppearPigpenIds: params.initDiseaseAppearPigpenIds,
+    initDiseaseAppearDays: params.initDiseaseAppearDays,
+    numberPigs: params.numberPigs,
+  });
+};

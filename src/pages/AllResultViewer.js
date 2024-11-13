@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
 import { useNavigate, useParams, Link } from "react-router-dom";
+import FarmPanoramaView from "./FarmPanoramaView";
 
 function AllResultViewer() {
   const FRAME_RATE = 45;
@@ -33,6 +34,8 @@ function AllResultViewer() {
   const [speed, setSpeed] = useState(100);
   const [maxFinalStep, setMaxFinalStep] = useState({});
   const [experimentResultDetails, setExperimentResultDetails] = useState({});
+
+  const [viewMode, setViewMode] = useState("detail");
   const eventSourceRef = useRef(null);
 
   quantum.register();
@@ -402,6 +405,16 @@ function AllResultViewer() {
         >
           <ForwardIcon className="size-5" />
         </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            setViewMode(viewMode === "detail" ? "panorama" : "detail")
+          }
+          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+        >
+          {viewMode === "detail" ? "Panorama View" : "Detail View"}
+        </button>
       </div>
 
       <div className="mx-auto relative max-w-xl place-content-center mt-4">
@@ -446,7 +459,7 @@ function AllResultViewer() {
             <l-quantum size="250" speed="1.75" color="#3b82f6"></l-quantum>
           </div>
         </div>
-      ) : (
+      ) : viewMode === "detail" ? (
         <div
           className={`grid ${
             resultIdArray.length === 1
@@ -518,6 +531,10 @@ function AllResultViewer() {
               ))}
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="w-full h-[calc(100vh-200px)] max-w-[90%] mx-auto">
+          <FarmPanoramaView resultImages={images} currentStep={currentStep} />
         </div>
       )}
     </div>

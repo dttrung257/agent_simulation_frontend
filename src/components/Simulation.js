@@ -171,7 +171,7 @@ function Simulation({
   return (
     <div key={simulation.order}>
       <div className="block p-6 mb-4 bg-white border border-gray-200 rounded-lg shadow">
-        <div className="flex justify-end mb-4 items-center">
+        {/* <div className="flex justify-end mb-4 items-center">
           {currentStep > 0 &&
             currentStep < simulation.finalStep &&
             isSimulationRunning &&
@@ -195,43 +195,95 @@ function Simulation({
               </div>
             </button>
           )}
+        </div> */}
+
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-4">
+            {/* Hiển thị title khi là multi simulation */}
+            {simulation.title && (
+              <h2 className="text-xl font-semibold text-blue-600">
+                {simulation.title}
+              </h2>
+            )}
+
+            {/* Hiển thị node info cho multi simulation */}
+            {selectedProject.id === 2 &&
+              simulation.title &&
+              nodeOptions.find((node) => node.id === simulation.nodeId) && (
+                <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-full">
+                  Node:{" "}
+                  {
+                    nodeOptions.find((node) => node.id === simulation.nodeId)
+                      .name
+                  }
+                </span>
+              )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Stop button */}
+            {currentStep > 0 &&
+              currentStep < simulation.finalStep &&
+              isSimulationRunning &&
+              status === 2 && (
+                <button
+                  disabled={isSimulationStopped}
+                  onClick={() => stopSimulationOnClick()}
+                  className="focus:outline-none disabled:cursor-not-allowed disabled:bg-red-300 items-center flex gap-2 text-white bg-red-500 hover:bg-red-600 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-md px-5 py-2.5"
+                >
+                  <XMarkIcon className="size-5" />
+                  Stop simulation
+                </button>
+              )}
+            {/* Remove button chỉ hiển thị cho single simulation */}
+            {!isSimulationRunning && !simulation.title && (
+              <button
+                onClick={() => removeSimulation(simulation.order)}
+                className="w-fit cursor-pointer items-center p-1 text-gray-900 rounded-lg hover:bg-gray-100"
+              >
+                <XMarkIcon className="size-6" />
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          <SimulationInput
-            title="Model"
-            name="modelId"
-            disabled={false} // Model luôn có thể chọn
-            currentValue={simulation.modelId}
-            options={modelOptions}
-            onChange={handleChange}
-          />
-          <SimulationInput
-            title="Experiment"
-            name="experimentId"
-            disabled={simulation.modelId == null} // Chỉ chọn được khi đã có Model
-            currentValue={simulation.experimentId}
-            options={experimentOptions}
-            onChange={handleChange}
-            isSimulationRunning={isSimulationRunning}
-          />
-          <SimulationInput
-            title="Node"
-            name="nodeId"
-            disabled={simulation.experimentId == null} // Chỉ chọn được khi đã có Experiment
-            currentValue={simulation.nodeId}
-            options={nodeOptions}
-            onChange={handleChange}
-            isSimulationRunning={isSimulationRunning}
-          />
-          <SimulationInput
-            title="Time"
-            name="finalStep"
-            currentValue={simulation.finalStep}
-            onChange={handleChange}
-            isSimulationRunning={isSimulationRunning}
-          />
-        </div>
+        {!simulation.title && (
+          <div className="grid grid-cols-4 gap-4">
+            <SimulationInput
+              title="Model"
+              name="modelId"
+              disabled={false} // Model luôn có thể chọn
+              currentValue={simulation.modelId}
+              options={modelOptions}
+              onChange={handleChange}
+            />
+            <SimulationInput
+              title="Experiment"
+              name="experimentId"
+              disabled={simulation.modelId == null} // Chỉ chọn được khi đã có Model
+              currentValue={simulation.experimentId}
+              options={experimentOptions}
+              onChange={handleChange}
+              isSimulationRunning={isSimulationRunning}
+            />
+            <SimulationInput
+              title="Node"
+              name="nodeId"
+              disabled={simulation.experimentId == null} // Chỉ chọn được khi đã có Experiment
+              currentValue={simulation.nodeId}
+              options={nodeOptions}
+              onChange={handleChange}
+              isSimulationRunning={isSimulationRunning}
+            />
+            <SimulationInput
+              title="Time"
+              name="finalStep"
+              currentValue={simulation.finalStep}
+              onChange={handleChange}
+              isSimulationRunning={isSimulationRunning}
+            />
+          </div>
+        )}
         {currentStep !== null && !hasError && (
           <div className="w-full">
             <div className="flex justify-end items-center font-medium text-lg mb-2 mt-4">
@@ -357,8 +409,27 @@ function Simulation({
           </>
         )}
       </div>
+
+      {/* {currentStep !== null && (
+        <div className="mt-4 flex justify-between text-sm text-gray-600">
+          <span>Step: {currentStep}</span>
+          <span>Time: {formatTime(currentStep)}</span>
+        </div>
+      )} */}
     </div>
   );
 }
+
+const formatTime = (step) => {
+  const minutes = step * 24 * 60;
+  const days = Math.floor(minutes / (24 * 60));
+  const hours = Math.floor((minutes % (24 * 60)) / 60);
+  const mins = minutes % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h ${mins}m`;
+  }
+  return `${hours}h ${mins}m`;
+};
 
 export default Simulation;

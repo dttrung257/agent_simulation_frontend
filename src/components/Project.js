@@ -1,6 +1,8 @@
 import AddSimulation from "./AddSimulation";
 import Alert from "../layouts/Alert";
 import Simulation from "./Simulation";
+import MultiSimulationInput from "./MultiSimulationInput";
+import { runMultiSimulation } from "../api/simulationApi";
 import { useEffect, useState } from "react";
 import {
   getModelOptionsList,
@@ -13,6 +15,10 @@ import { Link } from "react-router-dom";
 const FRAME_RATE = 45;
 
 function Project({ selectedProject }) {
+  const [simulationMode, setSimulationMode] = useState("multi");
+  const [multiSimulationStatus, setMultiSimulationStatus] = useState(null);
+  const [multiSimulationResults, setMultiSimulationResults] = useState([]);
+
   const [nodeList, setNodeList] = useState([]);
   const [modelOptions, setModelOptions] = useState([]);
   const [order, setOrder] = useState(1);
@@ -22,6 +28,45 @@ function Project({ selectedProject }) {
   const [isSimulationRunning, setIsSimulationRunning] = useState(false);
   const [disableSimulation, setDisableSimulation] = useState(false);
   const [simulationStatus, setSimulationStatus] = useState(null);
+
+  const runMultiSimulationEvent = async (params) => {
+    setDisableSimulation(true);
+
+    try {
+      const response = await runMultiSimulation(params);
+      setMultiSimulationStatus("Success! Multi simulation is running.");
+      setError(false);
+
+      const results = response.data.data;
+      setMultiSimulationResults(results);
+
+      // Create simulation objects for each pigpen
+      const simulations = results.map((result) => ({
+        order: result.order,
+        modelId: result.modelId,
+        nodeId: result.nodeId,
+        experimentId: result.experimentId,
+        finalStep: params.finalStep,
+        waiting: true,
+        status: 1,
+        currentStep: 0,
+        progress: 0,
+        resultId: result.experimentResultId,
+        title: result.title,
+      }));
+
+      setSimulation(simulations);
+      setIsSimulationRunning(true);
+    } catch (e) {
+      console.error(e);
+      setError(true);
+      setIsSimulationRunning(false);
+      setDisableSimulation(false);
+      setMultiSimulationStatus(
+        e.response?.data?.message || "Failed to start multi simulation"
+      );
+    }
+  };
 
   const getModelOptions = async () => {
     await getModelOptionsList(selectedProject.id, true).then((response) => {
@@ -323,25 +368,87 @@ function Project({ selectedProject }) {
                 )}
               </div>
             </div>
+
+            {selectedProject.id === 2 && (
+              <div className="px-4 mb-4 sm:ml-80">
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => {
+                      setSimulationMode("multi");
+                      refreshSimulation();
+                    }}
+                    className={`px-4 py-2 rounded-lg ${
+                      simulationMode === "multi"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    Multi Simulation
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSimulationMode("single");
+                      refreshSimulation();
+                    }}
+                    className={`px-4 py-2 rounded-lg ${
+                      simulationMode === "single"
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                  >
+                    Single Simulation
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="px-4 pb-4 overflow-y-auto flex-grow sm:ml-80">
-              {simulation.map((s, index) => {
-                return (
-                  <Simulation
-                    key={s.order}
-                    index={index}
-                    selectedProject={selectedProject}
-                    simulation={s}
-                    nodeOptions={nodeList}
-                    modelOptions={modelOptions}
-                    removeSimulation={removeSimulation}
+              {selectedProject.id === 2 && simulationMode === "multi" ? (
+                // Multi simulation mode for Project ID 2
+                !isSimulationRunning ? (
+                  <MultiSimulationInput
+                    onSubmit={runMultiSimulationEvent}
                     isSimulationRunning={isSimulationRunning}
-                    updateSimulation={updateSimulation}
-                    checkSimulationFinish={checkSimulationFinish}
+                    disabled={disableSimulation}
                   />
-                );
-              })}
-              {!isSimulationRunning && (
-                <AddSimulation onClick={addSimulation} />
+                ) : (
+                  // Show running simulations
+                  simulation.map((s, index) => (
+                    <Simulation
+                      key={s.order}
+                      index={index}
+                      selectedProject={selectedProject}
+                      simulation={s}
+                      nodeOptions={nodeList}
+                      modelOptions={modelOptions}
+                      removeSimulation={removeSimulation}
+                      isSimulationRunning={isSimulationRunning}
+                      updateSimulation={updateSimulation}
+                      checkSimulationFinish={checkSimulationFinish}
+                    />
+                  ))
+                )
+              ) : (
+                // Single simulation mode (original behavior)
+                <>
+                  {simulation.map((s, index) => (
+                    <Simulation
+                      key={s.order}
+                      index={index}
+                      selectedProject={selectedProject}
+                      simulation={s}
+                      nodeOptions={nodeList}
+                      modelOptions={modelOptions}
+                      removeSimulation={removeSimulation}
+                      isSimulationRunning={isSimulationRunning}
+                      updateSimulation={updateSimulation}
+                      checkSimulationFinish={checkSimulationFinish}
+                    />
+                  ))}
+                  {!isSimulationRunning && (
+                    <AddSimulation onClick={addSimulation} />
+                  )}
+                </>
               )}
             </div>
           </>
@@ -397,7 +504,11 @@ function Project({ selectedProject }) {
                 <button
                   className="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-md font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-green-400 to-blue-600 group-hover:from-green-400 group-hover:to-blue-600 hover:text-white disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed focus:ring-4 focus:ring-green-200"
                   disabled={simulation.length === 0 || disableSimulation}
-                  onClick={() => runSimulationEvent()}
+                  onClick={() =>
+                    selectedProject.id === 2 && simulationMode === "multi"
+                      ? null // Multi simulation is handled by MultiSimulationInput
+                      : runSimulationEvent()
+                  }
                 >
                   <span className="relative flex items-center gap-2 px-5 py-2.5 transition-all ease-in duration-75 bg-white rounded-md group-hover:bg-opacity-0">
                     {isSimulationRunning ? (
