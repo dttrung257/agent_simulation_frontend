@@ -14,6 +14,7 @@ import {
   BackwardIcon,
   ForwardIcon,
   ClockIcon,
+  ArrowUturnLeftIcon,
 } from "@heroicons/react/24/solid";
 import { quantum } from "ldrs";
 import { useNavigate, useParams, Link } from "react-router-dom";
@@ -35,10 +36,14 @@ function AllResultViewer() {
   const [maxFinalStep, setMaxFinalStep] = useState({});
   const [experimentResultDetails, setExperimentResultDetails] = useState({});
 
-  const [viewMode, setViewMode] = useState("detail");
+  const [viewMode, setViewMode] = useState("panorama");
+  const [displayStep, setDisplayStep] = useState(0);
   const eventSourceRef = useRef(null);
 
   quantum.register();
+
+  const actualStepToDisplayStep = (step) => Math.floor(step / FRAME_RATE);
+  const displayStepToActualStep = (display) => display * FRAME_RATE;
 
   const formatRealTime = (step) => {
     const totalSeconds = step * 60;
@@ -143,11 +148,23 @@ function AllResultViewer() {
 
     const speedNanoseconds = speed * 1_000_000;
 
+    const categoryIds = Object.entries(categoryId)
+      .flatMap(([resultId, categories]) =>
+        categories
+          .filter(
+            (cat) =>
+              cat.name.toLowerCase().includes("simulator") ||
+              cat.name.toLowerCase().includes("pigpen")
+          )
+          .map((cat) => cat.id)
+      )
+      .join(",");
+
     const apiUrl = `${
       process.env.REACT_APP_API_URL
     }/experiment_result_images/multi_experiment_animation?experiment_result_id=${resultIdArray.join(
       ","
-    )}&start_step=${currentStep}&end_step=${maxFinalStep}&duration=${speedNanoseconds}`;
+    )}&start_step=${currentStep}&end_step=${maxFinalStep}&duration=${speedNanoseconds}&category_ids=${categoryIds}`;
 
     const eventSource = new EventSource(apiUrl);
 
@@ -156,6 +173,7 @@ function AllResultViewer() {
       if (data.steps && data.steps.length > 0) {
         const step = data.steps[0];
         setCurrentStep(step.step);
+        setDisplayStep(actualStepToDisplayStep(step.step));
 
         const newImages = {};
         step.categories.forEach((category) => {
@@ -204,13 +222,15 @@ function AllResultViewer() {
   const resetToStart = () => {
     stopAnimation();
     setCurrentStep(0);
+    setDisplayStep(0);
     setInputStep(0);
   };
 
   const goToEnd = () => {
     stopAnimation();
     setCurrentStep(maxFinalStep);
-    setInputStep(maxFinalStep);
+    setDisplayStep(actualStepToDisplayStep(maxFinalStep));
+    setInputStep(actualStepToDisplayStep(maxFinalStep));
   };
 
   const handleSpeedChange = (e) => {
@@ -297,15 +317,19 @@ function AllResultViewer() {
 
   const handleChange = (e) => {
     setError(false);
-    setInputStep(parseInt(e.target.value));
+    const newDisplayStep = parseInt(e.target.value);
+    setInputStep(newDisplayStep);
   };
 
   const handleStepInput = () => {
-    if (inputStep > maxFinalStep || inputStep < 0) {
+    const maxDisplayStep = actualStepToDisplayStep(maxFinalStep);
+    if (inputStep > maxDisplayStep || inputStep < 0) {
       setError(true);
       return;
     }
-    setCurrentStep(inputStep);
+    const newActualStep = displayStepToActualStep(inputStep);
+    setCurrentStep(newActualStep);
+    setDisplayStep(inputStep);
   };
 
   return (
@@ -321,8 +345,9 @@ function AllResultViewer() {
 
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-center text-4xl font-semibold mt-2">
-          Step: {currentStep}
+          Step: {displayStep}
         </h1>
+
         <div className="flex items-center gap-2 text-2xl text-gray-600 mt-2">
           <ClockIcon className="size-6" />
           <span>{formatRealTime(currentStep)}</span>
@@ -361,8 +386,10 @@ function AllResultViewer() {
           type="button"
           onClick={() => {
             if (currentStep >= FRAME_RATE) {
-              setCurrentStep(currentStep - FRAME_RATE);
-              setInputStep(currentStep - FRAME_RATE);
+              const newStep = currentStep - FRAME_RATE;
+              setCurrentStep(newStep);
+              setDisplayStep(actualStepToDisplayStep(newStep));
+              setInputStep(actualStepToDisplayStep(newStep));
             }
           }}
           disabled={isPlaying}
@@ -387,8 +414,10 @@ function AllResultViewer() {
           type="button"
           onClick={() => {
             if (currentStep + FRAME_RATE < maxFinalStep) {
-              setCurrentStep(currentStep + FRAME_RATE);
-              setInputStep(currentStep + FRAME_RATE);
+              const newStep = currentStep + FRAME_RATE;
+              setCurrentStep(newStep);
+              setDisplayStep(actualStepToDisplayStep(newStep));
+              setInputStep(actualStepToDisplayStep(newStep));
             }
           }}
           disabled={isPlaying}
@@ -413,7 +442,7 @@ function AllResultViewer() {
           }
           className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
         >
-          {viewMode === "detail" ? "Panorama View" : "Detail View"}
+          {viewMode === "detail" ? "Panorama Mode" : "Detail Mode"}
         </button>
       </div>
 
@@ -430,7 +459,9 @@ function AllResultViewer() {
           className="block w-full p-4 ps-10 text-md text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-50 disabled:opacity-50"
           placeholder={`Step 0 (${formatRealTime(
             0
-          )}) to ${maxFinalStep} (${formatRealTime(maxFinalStep)})`}
+          )}) to ${actualStepToDisplayStep(maxFinalStep)} (${formatRealTime(
+            maxFinalStep
+          )})`}
           required
         />
         <button
@@ -447,7 +478,8 @@ function AllResultViewer() {
         <div className="max-w-xl mx-auto">
           <p className="mt-2 text-sm text-red-600">
             <span className="font-medium">
-              Invalid input! Please choose step between 0 and {maxFinalStep}
+              Invalid input! Please choose step between 0 and{" "}
+              {actualStepToDisplayStep(maxFinalStep)}
             </span>
           </p>
         </div>
@@ -479,18 +511,17 @@ function AllResultViewer() {
               </h2>
               {images[resultId]?.map((image, imageIndex) => (
                 <div key={imageIndex} className="group">
-                  <div
-                    onClick={() =>
-                      navigate(
-                        `/result/${resultId}/view-steps?finalStep=${experimentResultDetails[resultId]?.finalStep}`
-                      )
-                    }
+                  <Link
+                    to={`/result/${resultId}/view-steps?finalStep=${experimentResultDetails[resultId]?.finalStep}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="relative bg-white border border-gray-300 rounded-lg 
-                transition-all duration-300 ease-in-out
-                cursor-pointer 
-                hover:scale-[1.02]
-                hover:shadow-xl
-                hover:border-blue-400"
+      transition-all duration-300 ease-in-out
+      cursor-pointer 
+      block
+      hover:scale-[1.02]
+      hover:shadow-xl
+      hover:border-blue-400"
                   >
                     {/* Overlay when hover */}
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 rounded-lg flex items-center justify-center">
@@ -507,7 +538,7 @@ function AllResultViewer() {
                       src={`data:image/jpeg;base64,${image.encodedImage}`}
                       className="w-full h-full object-contain"
                     />
-                  </div>
+                  </Link>
 
                   <h3 className="text-lg font-medium mt-3 text-center text-gray-700">
                     {image.name}

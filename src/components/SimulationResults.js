@@ -207,6 +207,8 @@ const SimulationResults = () => {
                     <div className="flex gap-2">
                       <Link
                         to={`/result/${detail.experimentResultId}/view-steps?finalStep=${detail.finalStep}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
                       >
                         <EyeIcon className="w-4 h-4 mr-2" />
@@ -258,6 +260,8 @@ const SimulationResults = () => {
             <div className="mt-4 flex justify-end">
               <Link
                 to={`/result/${simulation.resultIds}/view-results`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200"
               >
                 View All Results
