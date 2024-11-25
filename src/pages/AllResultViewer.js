@@ -4,6 +4,7 @@ import {
   getImageResultFromRange,
   getCategoriesResult,
   getExperimentResultDetail,
+  getStatistics,
 } from "../api/simulationApi";
 import {
   ChevronLeftIcon,
@@ -19,6 +20,7 @@ import {
 import { quantum } from "ldrs";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import FarmPanoramaView from "./FarmPanoramaView";
+import StatisticsView from "../components/StatisticsView";
 
 function AllResultViewer() {
   const FRAME_RATE = 45;
@@ -38,6 +40,9 @@ function AllResultViewer() {
 
   const [viewMode, setViewMode] = useState("panorama");
   const [displayStep, setDisplayStep] = useState(0);
+  const [showStats, setShowStats] = useState(true);
+  const [statsData, setStatsData] = useState(null);
+
   const eventSourceRef = useRef(null);
 
   quantum.register();
@@ -80,6 +85,20 @@ function AllResultViewer() {
       ? `${days} ${daysString}, ${formattedHours}:${formattedMinutes}:${formattedSeconds}`
       : `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
   };
+
+  useEffect(() => {
+    if (showStats && !statsData) {
+      const fetchStats = async () => {
+        try {
+          const response = await getStatistics(resultIds);
+          setStatsData(response.data.data);
+        } catch (error) {
+          console.error("Error fetching statistics:", error);
+        }
+      };
+      fetchStats();
+    }
+  }, [showStats, statsData, resultIds]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -444,6 +463,13 @@ function AllResultViewer() {
         >
           {viewMode === "detail" ? "Panorama Mode" : "Detail Mode"}
         </button>
+
+        <button
+          onClick={() => setShowStats(!showStats)}
+          className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5"
+        >
+          {showStats ? "Hide Statistics" : "Show Statistics"}
+        </button>
       </div>
 
       <div className="mx-auto relative max-w-xl place-content-center mt-4">
@@ -568,6 +594,8 @@ function AllResultViewer() {
           <FarmPanoramaView resultImages={images} currentStep={currentStep} />
         </div>
       )}
+
+      {showStats && statsData && <StatisticsView data={statsData} />}
     </div>
   );
 }

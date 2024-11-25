@@ -100,3 +100,9 @@ export const runMultiSimulation = async (params) => {
     numberPigs: params.numberPigs,
   });
 };
+
+export const getStatistics = async (resultIds) => {
+  return await axiosInstance.get(
+    `/simulation_statistics?experiment_result_ids=${resultIds}`
+  );
+};
