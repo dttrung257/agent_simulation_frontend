@@ -11,6 +11,7 @@ import {
 } from "../api/simulationApi";
 import { ArrowPathIcon, PlayIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
+import NodeMetrics from "./NodeMetrics";
 
 const FRAME_RATE = 45;
 
@@ -244,7 +245,7 @@ function Project({ selectedProject }) {
                         <path d="M9 17h6M9 12h6M9 7h6M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H4a2 2 0 00-2 2v16a2 2 0 002 2z" />
                       </svg>
                       <span className="font-medium text-gray-700 group-hover:text-white">
-                        Simulation Results
+                        Simulation History
                       </span>
                     </Link>
                   </div>
@@ -367,6 +368,10 @@ function Project({ selectedProject }) {
                   </button>
                 )}
               </div>
+              {/* {isSimulationRunning && (
+                <NodeMetrics isSimulationRunning={isSimulationRunning} />
+              )} */}
+              <NodeMetrics selectedProject={selectedProject} />
             </div>
 
             {selectedProject.id === 2 && (
@@ -383,7 +388,7 @@ function Project({ selectedProject }) {
                         : "bg-gray-200 text-gray-700"
                     }`}
                   >
-                    Multi Simulation
+                    Farm Simulation
                   </button>
                   <button
                     onClick={() => {
@@ -396,7 +401,7 @@ function Project({ selectedProject }) {
                         : "bg-gray-200 text-gray-700"
                     }`}
                   >
-                    Single Simulation
+                    Simulation
                   </button>
                 </div>
               </div>

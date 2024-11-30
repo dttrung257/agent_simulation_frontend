@@ -5,6 +5,7 @@ import {
   getCategoriesResult,
   getExperimentResultDetail,
   getStatistics,
+  getSimulationMetrics,
 } from "../api/simulationApi";
 import {
   ChevronLeftIcon,
@@ -21,6 +22,7 @@ import { quantum } from "ldrs";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import FarmPanoramaView from "./FarmPanoramaView";
 import StatisticsView from "../components/StatisticsView";
+import PerformanceMetrics from "../components/PerformanceMetrics";
 
 function AllResultViewer() {
   const FRAME_RATE = 45;
@@ -37,6 +39,7 @@ function AllResultViewer() {
   const [speed, setSpeed] = useState(100);
   const [maxFinalStep, setMaxFinalStep] = useState({});
   const [experimentResultDetails, setExperimentResultDetails] = useState({});
+  const [metricsData, setMetricsData] = useState(null);
 
   const [viewMode, setViewMode] = useState("panorama");
   const [displayStep, setDisplayStep] = useState(0);
@@ -158,6 +161,19 @@ function AllResultViewer() {
 
     fetchExperimentResultDetail();
   }, []);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const response = await getSimulationMetrics(resultIds);
+        console.log(response.data.data);
+        setMetricsData(response.data.data);
+      } catch (error) {
+        console.error("Error fetching metrics:", error);
+      }
+    };
+    fetchMetrics();
+  }, [resultIds]);
 
   const startAnimation = () => {
     setIsPlaying(true);
@@ -594,6 +610,8 @@ function AllResultViewer() {
           <FarmPanoramaView resultImages={images} currentStep={currentStep} />
         </div>
       )}
+
+      {metricsData && <PerformanceMetrics data={metricsData} />}
 
       {showStats && statsData && <StatisticsView data={statsData} />}
     </div>

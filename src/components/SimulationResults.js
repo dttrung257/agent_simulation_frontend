@@ -145,7 +145,7 @@ const SimulationResults = () => {
   return (
     <div className="bg-white shadow-lg rounded-lg p-6 max-w-4xl mx-auto">
       <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
-        Simulation Results
+        Simulation History
       </h2>
 
       <div className="space-y-6">

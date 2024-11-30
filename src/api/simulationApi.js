@@ -106,3 +106,17 @@ export const getStatistics = async (resultIds) => {
     `/simulation_statistics?experiment_result_ids=${resultIds}`
   );
 };
+
+export const getNodeMetrics = async () => {
+  return await axiosInstance.get("/metrics");
+};
+
+export const getMetricValue = async (url) => {
+  return await axiosInstance.get(url);
+};
+
+export const getSimulationMetrics = async (resultIds) => {
+  return await axiosInstance.get(
+    `/metrics/simulation?experiment_result_ids=${resultIds}`
+  );
+};

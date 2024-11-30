@@ -114,7 +114,7 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
   return (
     <div className="p-6 bg-white border border-gray-200 rounded-lg shadow">
       <h2 className="mb-4 text-2xl font-semibold text-center">
-        Multi Simulation Setup
+        Farm Simulation Setup
       </h2>
 
       {/* Basic Configuration */}
@@ -166,7 +166,7 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
 
       {/* Disease Configuration */}
       <div className="mb-6">
-        <h3 className="mb-4 text-lg font-medium">Disease Configuration</h3>
+        <h3 className="mb-4 text-lg font-medium">Pigpen Configuration</h3>
         <div className="grid grid-cols-3 gap-4">
           {pigpens.map((pen) => (
             <div key={pen} className="p-4 border rounded-lg">
@@ -192,7 +192,7 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
                 {simulationParams.selectedPigpens.includes(pen) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Disease Day
+                      Disease outbreak day
                     </label>
                     <input
                       type="number"
@@ -253,7 +253,7 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
           disabled={disabled || isSimulationRunning}
           className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Run Multi Simulation
+          Run Farm Simulation
         </button>
       </div>
     </div>
