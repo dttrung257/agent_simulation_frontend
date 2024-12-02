@@ -115,7 +115,7 @@ function Simulation({
           data.status === 3
         ) {
           clearInterval(interval.current);
-          interval.current = setInterval(updateStatus, 700);
+          interval.current = setInterval(updateStatus, 3000);
         }
       } catch (error) {
         console.log(error);

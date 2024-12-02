@@ -91,6 +91,13 @@ const PerformanceMetrics = ({ data }) => {
     labelOffset: -55,
   };
 
+  const getTickCount = (dataLength) => {
+    if (dataLength <= 10) return dataLength;
+    if (dataLength <= 50) return 10;
+    if (dataLength <= 100) return 8;
+    return 6;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
       <h2 className="text-2xl font-semibold text-center mb-8 mt-8">
@@ -103,6 +110,8 @@ const PerformanceMetrics = ({ data }) => {
         const { transformed, cpuAverage, memoryAverage } = transformData(
           node.nodeMetricData
         );
+
+        const tickCount = getTickCount(transformed.length);
 
         return (
           <div key={nodeIndex} className="space-y-8 mt-12">
@@ -172,7 +181,7 @@ const PerformanceMetrics = ({ data }) => {
             {/* CPU Chart */}
             <div className="border rounded-lg p-6">
               <h4 className="text-md font-medium mb-4">CPU Usage (%)</h4>
-              <div className="h-[300px]">
+              <div className="h-[1000px]">
                 <ResponsiveContainer>
                   <AreaChart data={transformed} margin={chartConfig.margin}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -180,11 +189,19 @@ const PerformanceMetrics = ({ data }) => {
                       dataKey="timeInSeconds"
                       tickFormatter={formatTimeAxis}
                       tickMargin={15}
+                      //   interval="preserveStartEnd"
+                      //   tickCount={tickCount}
+                      interval={Math.ceil(transformed.length / 12)}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                      fontSize={28}
                     />
                     <YAxis
                       domain={[0, 100]}
                       tickFormatter={(value) => `${value}%`}
                       tickMargin={20}
+                      fontSize={28}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend verticalAlign="top" height={36} />
@@ -240,7 +257,7 @@ const PerformanceMetrics = ({ data }) => {
             {/* Memory Chart */}
             <div className="border rounded-lg p-6">
               <h4 className="text-md font-medium mb-4">Memory Usage</h4>
-              <div className="h-[300px]">
+              <div className="h-[1000px]">
                 <ResponsiveContainer>
                   <AreaChart data={transformed} margin={chartConfig.margin}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -248,6 +265,13 @@ const PerformanceMetrics = ({ data }) => {
                       dataKey="timeInSeconds"
                       tickFormatter={formatTimeAxis}
                       tickMargin={15}
+                      //   interval="preserveStartEnd"
+                      //   tickCount={tickCount}
+                      interval={Math.ceil(transformed.length / 12)}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                      fontSize={28}
                     />
                     <YAxis
                       domain={[
@@ -258,6 +282,7 @@ const PerformanceMetrics = ({ data }) => {
                         `${(value / 1024).toFixed(2)} GB`
                       } // Convert MB to GB
                       tickMargin={20}
+                      fontSize={28}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend verticalAlign="top" height={36} />
