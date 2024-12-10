@@ -170,6 +170,11 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
         <div className="grid grid-cols-3 gap-4">
           {pigpens.map((pen) => (
             <div key={pen} className="p-4 border rounded-lg">
+
+              <div className="flex items-center mb-2">
+              <span className="text-sm font-bold text-gray-900">Pigpen {pen}</span>
+              </div>
+
               <div className="flex items-center mb-3">
                 <input
                   type="checkbox"
@@ -183,7 +188,7 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
                   htmlFor={`pigpen-${pen}`}
                   className="ml-2 text-sm font-medium text-gray-900"
                 >
-                  Pigpen {pen}
+                  Disease Configuration
                 </label>
               </div>
 
@@ -192,7 +197,7 @@ function MultiSimulationInput({ onSubmit, isSimulationRunning, disabled }) {
                 {simulationParams.selectedPigpens.includes(pen) && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Disease outbreak day
+                      ASF Disease outbreak day
                     </label>
                     <input
                       type="number"
