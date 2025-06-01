@@ -108,7 +108,7 @@ export const getStatistics = async (resultIds) => {
 };
 
 export const getNodeMetrics = async () => {
-  return await axiosInstance.get("/metrics");
+  // return await axiosInstance.get("/metrics");
 };
 
 export const getMetricValue = async (url) => {
