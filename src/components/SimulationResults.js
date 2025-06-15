@@ -144,7 +144,7 @@ const SimulationResults = () => {
 
   return (
     <div className="bg-white shadow-lg rounded-lg p-6 max-w-4xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">
         Simulation History
       </h2>
 
@@ -153,20 +153,20 @@ const SimulationResults = () => {
           <div key={simulation.id} className="border rounded-lg p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-2">
-                <ClockIcon className="w-5 h-5 text-gray-500" />
-                <h3 className="text-lg font-semibold text-gray-700">
+                <ClockIcon className="w-6 h-6 text-gray-500" />
+                <h3 className="text-xl font-semibold text-gray-700">
                   {formatDate(simulation.createdAt)}
                 </h3>
               </div>
               <button
                 onClick={() => handleDelete(simulation.id)}
                 disabled={deleteStatus[simulation.id] === "loading"}
-                className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 focus:z-10 focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="inline-flex items-center px-4 py-2 text-base font-medium text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 focus:z-10 focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
                 {deleteStatus[simulation.id] === "loading" ? (
-                  <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
+                  <div className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
                 ) : (
-                  <TrashIcon className="w-4 h-4 mr-2" />
+                  <TrashIcon className="w-5 h-5 mr-2" />
                 )}
                 Delete
               </button>
@@ -189,29 +189,29 @@ const SimulationResults = () => {
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="text-lg font-medium text-gray-900 mb-2">
                         {detail.experimentName}
                       </h4>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-base text-gray-500 mb-1">
                         Model: {detail.modelName}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-base text-gray-500 mb-1">
                         Final Step: {detail.finalStep - 1}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-base text-gray-500">
                         Total Time:{" "}
                         {formatTime((detail.finalStep - 1) * FRAME_RATE)}
                       </p>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <Link
                         to={`/result/${detail.experimentResultId}/view-steps?finalStep=${detail.finalStep}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
+                        className="inline-flex items-center px-4 py-2 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
                       >
-                        <EyeIcon className="w-4 h-4 mr-2" />
+                        <EyeIcon className="w-5 h-5 mr-2" />
                         View Result
                       </Link>
 
@@ -223,13 +223,13 @@ const SimulationResults = () => {
                           downloadStatus[detail.experimentResultId] ===
                           "loading"
                         }
-                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center px-4 py-2 text-base font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {downloadStatus[detail.experimentResultId] ===
                         "loading" ? (
-                          <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+                          <div className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
                         ) : (
-                          <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+                          <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
                         )}
                         Download
                       </button>
@@ -262,7 +262,7 @@ const SimulationResults = () => {
                 to={`/result/${simulation.resultIds}/view-results`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200"
+                className="inline-flex items-center px-5 py-2.5 text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200"
               >
                 View All Results
               </Link>

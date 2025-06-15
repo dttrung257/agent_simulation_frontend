@@ -21,11 +21,13 @@ const PerformanceMetrics = ({ data }) => {
       const timeInSeconds = index === 0 ? 0 : startTime + item.duration / 1000;
       startTime = timeInSeconds;
 
+      const totalMemoryMB = 500; // Define total memory as 500MB
       return {
         ...item,
         timeInSeconds,
         cpuUsagePercent: item.cpuUsage * 100,
         memoryUsageMB: item.memoryUsage / (1024 * 1024),
+        memoryUsagePercent: (item.memoryUsage / (1024 * 1024) / totalMemoryMB) * 100,
       };
     });
 
@@ -78,8 +80,7 @@ const PerformanceMetrics = ({ data }) => {
         </p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
-            {entry.name}: {entry.value.toFixed(2)}{" "}
-            {entry.name === "CPU Usage" ? "%" : "MB"}
+            {entry.name}: {entry.value.toFixed(2)}%
           </p>
         ))}
       </div>
@@ -87,7 +88,7 @@ const PerformanceMetrics = ({ data }) => {
   };
 
   const chartConfig = {
-    margin: { top: 20, right: 30, left: 70, bottom: 30 },
+    margin: { top: 40, right: 30, left: 70, bottom: 30 },
     labelOffset: -55,
   };
 
@@ -100,7 +101,7 @@ const PerformanceMetrics = ({ data }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
-      <h2 className="text-2xl font-semibold text-center mb-8 mt-8">
+      <h2 className="text-3xl font-semibold text-center mb-8 mt-8">
         Performance Metrics
       </h2>
 
@@ -115,7 +116,7 @@ const PerformanceMetrics = ({ data }) => {
 
         return (
           <div key={nodeIndex} className="space-y-8 mt-12">
-            <h3 className="text-lg font-medium">Node {node.nodeName}</h3>
+            <h3 className="text-xl font-medium">Node {node.nodeName}</h3>
 
             <div className="mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -126,14 +127,13 @@ const PerformanceMetrics = ({ data }) => {
                       key={index}
                       className="bg-gray-50 rounded-lg p-4 border"
                     >
-                      <div className="mb-2 font-medium text-center">
+                      <div className="mb-2 text-lg font-medium text-center">
                         Simulation {index + 1}
                       </div>
-                      <div className="text-sm space-y-1">
+                      <div className="text-base space-y-2">
                         <div>Experiment: {result.experimentName}</div>
                         <div>Model: {result.modelName}</div>
-                        {/* <div>Steps: {getDisplayStep(result.finalStep)}</div> */}
-                        <div> Frame Rate: {FRAME_RATE}</div>
+                        <div>Frame Rate: {FRAME_RATE}</div>
                         <div className="text-blue-600 font-medium">
                           Simulation Time:{" "}
                           {formatSimulationTime(result.finalStep)}
@@ -149,10 +149,10 @@ const PerformanceMetrics = ({ data }) => {
 
             <div className="flex justify-start mb-4 gap-20">
               <div>
-                <h4 className="font-medium text-gray-600">
+                <h4 className="text-lg font-medium text-gray-600">
                   Total Simulations:
                 </h4>
-                <p className="text-purple-600 text-lg font-semibold">
+                <p className="text-xl font-semibold text-purple-600">
                   {
                     data.experimentResultMetrics.filter(
                       (result) => result.nodeId === node.nodeId
@@ -161,18 +161,18 @@ const PerformanceMetrics = ({ data }) => {
                 </p>
               </div>
               <div>
-                <h4 className="font-medium text-gray-600">
+                <h4 className="text-lg font-medium text-gray-600">
                   Average CPU Usage:
                 </h4>
-                <p className="text-blue-600 text-lg font-semibold">
+                <p className="text-xl font-semibold text-blue-600">
                   {cpuAverage.toFixed(2)}%
                 </p>
               </div>
               <div>
-                <h4 className="font-medium text-gray-600">
+                <h4 className="text-lg font-medium text-gray-600">
                   Average Memory Usage:
                 </h4>
-                <p className="text-red-600 text-lg font-semibold">
+                <p className="text-xl font-semibold text-red-600">
                   {memoryAverage.toFixed(2)} MB / {nodeMemory.toFixed(2)} GB
                 </p>
               </div>
@@ -180,7 +180,7 @@ const PerformanceMetrics = ({ data }) => {
 
             {/* CPU Chart */}
             <div className="border rounded-lg p-6">
-              <h4 className="text-md font-medium mb-4">CPU Usage (%)</h4>
+              <h1 className="text-xl font-medium mb-4">CPU Usage (%)</h1>
               <div className="h-[1000px]">
                 <ResponsiveContainer>
                   <AreaChart data={transformed} margin={chartConfig.margin}>
@@ -204,7 +204,14 @@ const PerformanceMetrics = ({ data }) => {
                       fontSize={28}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="top" height={36} />
+                    <Legend 
+                      verticalAlign="top" 
+                      height={36}
+                      wrapperStyle={{
+                        fontSize: '24px',
+                        paddingTop: '0px'
+                      }}
+                    />
                     <defs>
                       <linearGradient
                         id="cpuGradient"
@@ -236,9 +243,10 @@ const PerformanceMetrics = ({ data }) => {
                         transformed.length <= 20
                           ? {
                               position: "top",
-                              dy: 0,
-                              dx: -30,
+                              dy: -10, // Moving label much higher up to avoid overlap
+                              dx: 0,   // Centering horizontally
                               fill: "#4A90E2",
+                              fontSize: 23,
                               formatter: (value) => `${value.toFixed(1)}%`,
                             }
                           : false
@@ -256,7 +264,7 @@ const PerformanceMetrics = ({ data }) => {
 
             {/* Memory Chart */}
             <div className="border rounded-lg p-6">
-              <h4 className="text-md font-medium mb-4">Memory Usage</h4>
+              <h1 className="text-xl font-medium mb-4">Memory Usage (MB)</h1>
               <div className="h-[1000px]">
                 <ResponsiveContainer>
                   <AreaChart data={transformed} margin={chartConfig.margin}>
@@ -274,18 +282,20 @@ const PerformanceMetrics = ({ data }) => {
                       fontSize={28}
                     />
                     <YAxis
-                      domain={[
-                        0,
-                        node.nodeMetricData[0]?.systemMemory / (1024 * 1024),
-                      ]} // Set max to total system memory
-                      tickFormatter={(value) =>
-                        `${(value / 1024).toFixed(2)} GB`
-                      } // Convert MB to GB
+                      domain={[0, 500]} // Set domain to 0-500MB
+                      tickFormatter={(value) => `${value} MB`}
                       tickMargin={20}
                       fontSize={28}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="top" height={36} />
+                    <Legend 
+                      verticalAlign="top" 
+                      height={36}
+                      wrapperStyle={{
+                        fontSize: '24px',
+                        paddingTop: '0px'
+                      }}
+                    />
                     <defs>
                       <linearGradient
                         id="memoryGradient"
@@ -313,18 +323,7 @@ const PerformanceMetrics = ({ data }) => {
                       stroke="#FF6B6B"
                       fill="url(#memoryGradient)"
                       strokeWidth={2}
-                      label={
-                        transformed.length <= 20
-                          ? {
-                              position: "top",
-                              dy: 0,
-                              dx: -30,
-                              fill: "#FF6B6B",
-                              formatter: (value) =>
-                                `${(value / 1024).toFixed(3)} GB`,
-                            }
-                          : false
-                      }
+                      label={false}
                       dot={
                         transformed.length <= 20
                           ? { r: 4, fill: "#FF6B6B" }
